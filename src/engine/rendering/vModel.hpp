@@ -56,6 +56,8 @@ namespace v
 
         static std::unique_ptr<vModel> createModelFromFile(vDevice &device, const std::string &filepath);
         static std::unique_ptr<vModel> createModelFromFile(vDevice &device, const std::string &filepath, const std::string &texturePath);
+        static std::shared_ptr<vModel> createSharedModelFromFile(vDevice &device, const std::string &filepath, vDescriptorSetLayout &setLayout, vDescriptorPool &pool);
+        static std::shared_ptr<vModel> createSharedModelFromFile(vDevice &device, const std::string &filepath, const std::string &texturePath, vDescriptorSetLayout &setLayout, vDescriptorPool &pool); 
 
         void setTexture(std::shared_ptr<vTexture> texture);
         std::shared_ptr<vTexture> getTexture() const { return texture; }

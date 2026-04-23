@@ -73,8 +73,8 @@ namespace v
 
         pipelineConfig.renderPass = renderPass;
         pipelineConfig.pipelineLayout = pipelineLayout;
-
-        pipeline = std::make_unique<vPipeline>(device, pipelineConfig, "../shaders/default.vert.spv", "../shaders/default.frag.spv");
+        
+        pipeline = std::make_unique<vPipeline>(device, pipelineConfig,  std::string(PROJECT_ROOT) + "shaders/default.vert.spv", std::string(PROJECT_ROOT) + "shaders/default.frag.spv");
     }
 
     void DefaultRenderSystem::renderGameObjects(FrameInfo &frameInfo)
@@ -92,22 +92,23 @@ namespace v
         vkCmdBindDescriptorSets(frameInfo.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &frameInfo.globalDescriptorSet, 0, nullptr);
 
         vModel *lastBoundModel = nullptr;
-        for (auto &kv : frameInfo.gameObjects)
-        {
-            auto &gameObject = kv.second;
-            if (gameObject.model == nullptr) continue;
 
-            SimplePushConstantData push{};
-            push.modelMatrix = gameObject.transform.mat4();
+        frameInfo.entityStore.forEach<ecs::MeshRendererComponent, ecs::TransformComponent>([&](ecs::MeshRendererComponent &mesh, ecs::TransformComponent &transform)
+        {
+            if (!mesh.active) return;
+            if (mesh.model == nullptr) return;
+
+         SimplePushConstantData push{};
+            push.modelMatrix = transform.mat4();
 
             vkCmdPushConstants(frameInfo.commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(SimplePushConstantData), &push);
 
-            if (gameObject.model.get() != lastBoundModel)
+            if (mesh.model.get() != lastBoundModel)
             {
-                gameObject.model->bind(frameInfo.commandBuffer);
+                mesh.model->bind(frameInfo.commandBuffer);
 
-                VkDescriptorSet textureSet = gameObject.model->hasTextureDescriptorSet()
-                    ? gameObject.model->getTextureDescriptorSet()
+                VkDescriptorSet textureSet = mesh.model->hasTextureDescriptorSet()
+                    ? mesh.model->getTextureDescriptorSet()
                     : defaultTextureSet;
                 vkCmdBindDescriptorSets(
                     frameInfo.commandBuffer,
@@ -119,10 +120,10 @@ namespace v
                     0,
                     nullptr);
 
-                lastBoundModel = gameObject.model.get();
+                lastBoundModel = mesh.model.get();
             }
-            gameObject.model->draw(frameInfo.commandBuffer);
-        }
+            mesh.model->draw(frameInfo.commandBuffer);
+        });
 
         // std::cout << "objects culled: " << culled << "/4096\n";
     }

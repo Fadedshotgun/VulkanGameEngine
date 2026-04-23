@@ -119,7 +119,7 @@ namespace v
             if (auto commandBuffer = renderer.beginFrame())
             {
                 int frameIndex = renderer.getFrameIndex();
-                FrameInfo frameInfo{frameIndex, frameTime, commandBuffer, currentCamera, globalDescriptorSets[frameIndex], gameObjects, renderMode};
+                FrameInfo frameInfo{frameIndex, frameTime, commandBuffer, currentCamera, globalDescriptorSets[frameIndex], entityStore, renderMode};
 
                 // update
                 UniformBufferObject uboData{};
@@ -134,7 +134,6 @@ namespace v
 
                 // render
                 renderer.beginSwapChain(commandBuffer);
-
                 // render solid before semi transparent
                 renderSystem.renderGameObjects(frameInfo);
                 pointLightRenderSystem.render(frameInfo);
@@ -151,31 +150,62 @@ namespace v
 
     void vApp::loadGameObjects()
     {
-        std::string path = std::string(PROJECT_ROOT) + "models/smooth_vase.obj";
-        std::shared_ptr<vModel> model = vModel::createModelFromFile(device, path);
+        auto floor = entityStore.createEntity();
+        floor.addComponent<ecs::MeshRendererComponent>({
+            vModel::createSharedModelFromFile(
+                device,
+                std::string(PROJECT_ROOT) + "models/quad.obj",
+                std::string(PROJECT_ROOT) + "textures/huhdog.jpg",
+                *textureSetLayout,
+                *textureDescriptorPool)
+        });
+        floor.addComponent<ecs::TransformComponent>({.translation = {0.f, 0.f, 0.f}, .scale = {1.f, 1.f, 1.f}});
 
-        std::string path2 = std::string(PROJECT_ROOT) + "models/flat_vase.obj";
-        std::shared_ptr<vModel> model2 = vModel::createModelFromFile(device, path2);
+        auto vase = entityStore.createEntity();
+        vase.addComponent<ecs::MeshRendererComponent>({
+            vModel::createSharedModelFromFile(
+                device,
+                std::string(PROJECT_ROOT) + "models/smooth_vase.obj",
+                *textureSetLayout,
+                *textureDescriptorPool)
+        });
+        vase.addComponent<ecs::TransformComponent>({.translation = {1.f, 0.f, 0.f}, .scale = {1.f, 1.f, 1.f}});
 
-        std::string path3 = std::string(PROJECT_ROOT) + "models/quad.obj";
-        std::string path4 = std::string(PROJECT_ROOT) + "textures/huhdog.jpg";
-        std::shared_ptr<vModel> model3 = vModel::createModelFromFile(device, path3, path4);
-        model3->createTextureDescriptor(*textureSetLayout, *textureDescriptorPool);
+        auto vase2 = entityStore.createEntity();
+        vase2.addComponent<ecs::MeshRendererComponent>({
+            vModel::createSharedModelFromFile(
+                device,
+                std::string(PROJECT_ROOT) + "models/flat_vase.obj",
+                *textureSetLayout,
+                *textureDescriptorPool)
+        });
+        vase2.addComponent<ecs::TransformComponent>({.translation = {-1.f, 0.f, 0.f}, .scale = {1.f, 1.f, 1.f}});
 
-        vGameObject gameObject = vGameObject::createGameObject();
-        gameObject.model = model;
-        gameObject.transform.translation = {1.f, 0.f, 0.f};
-        gameObject.transform.scale = {1.f, 1.f, 1.f};
+        // std::string path = std::string(PROJECT_ROOT) + "models/smooth_vase.obj";
+        // std::shared_ptr<vModel> model = vModel::createModelFromFile(device, path);
 
-        vGameObject gameObject2 = vGameObject::createGameObject();
-        gameObject2.model = model2;
-        gameObject2.transform.translation = {-0.f, 0.f, 0.f};
-        gameObject2.transform.scale = {1.f, 1.f, 1.f};
+        // std::string path2 = std::string(PROJECT_ROOT) + "models/flat_vase.obj";
+        // std::shared_ptr<vModel> model2 = vModel::createModelFromFile(device, path2);
 
-        vGameObject floor = vGameObject::createGameObject();
-        floor.model = model3;
-        floor.transform.translation = {0.f, 0.f, 0.f};
-        floor.transform.scale = {1.f, 1.f, 1.f};
+        // std::string path3 = std::string(PROJECT_ROOT) + "models/quad.obj";
+        // std::string path4 = std::string(PROJECT_ROOT) + "textures/huhdog.jpg";
+        // std::shared_ptr<vModel> model3 = vModel::createModelFromFile(device, path3, path4);
+        // model3->createTextureDescriptor(*textureSetLayout, *textureDescriptorPool);
+
+        // vGameObject gameObject = vGameObject::createGameObject();
+        // gameObject.model = model;
+        // gameObject.transform.translation = {1.f, 0.f, 0.f};
+        // gameObject.transform.scale = {1.f, 1.f, 1.f};
+
+        // vGameObject gameObject2 = vGameObject::createGameObject();
+        // gameObject2.model = model2;
+        // gameObject2.transform.translation = {-0.f, 0.f, 0.f};
+        // gameObject2.transform.scale = {1.f, 1.f, 1.f};
+
+        // vGameObject floor = vGameObject::createGameObject();
+        // floor.model = model3;
+        // floor.transform.translation = {0.f, 0.f, 0.f};
+        // floor.transform.scale = {1.f, 1.f, 1.f};
 
         std::vector<glm::vec3> lightColors{
             {1.f, .1f, .1f},
@@ -188,17 +218,12 @@ namespace v
 
         for (int i = 0; i < lightColors.size(); i++)
         {
-            auto pointLight = vGameObject::makePointLight(.2f);
-            pointLight.color = lightColors[i];
-
             auto rotateLight = glm::rotate(glm::mat4(1.f), (float)i / lightColors.size() * glm::two_pi<float>(), {0.f, 1.f, 0.f});
-            pointLight.transform.translation = glm::vec3(rotateLight * glm::vec4(-1.f, -1.f, -1.f, 1.f));
+            auto translation = glm::vec3(rotateLight * glm::vec4(-1.f, -1.f, -1.f, 1.f));
 
-            gameObjects.emplace(pointLight.getId(), std::move(pointLight));
+            auto pointLight = entityStore.createEntity();
+            pointLight.addComponent<ecs::PointLightComponent>({.color = lightColors[i]});
+            pointLight.addComponent<ecs::TransformComponent>({.translation = translation, .scale = {.1f, .1f, .1f}});
         }
-
-        // gameObjects.emplace(gameObject.getId(), std::move(gameObject));
-        // gameObjects.emplace(gameObject2.getId(), std::move(gameObject2));
-        gameObjects.emplace(floor.getId(), std::move(floor));
     }
 }

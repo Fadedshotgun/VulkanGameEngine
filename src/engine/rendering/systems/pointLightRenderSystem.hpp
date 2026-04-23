@@ -4,7 +4,6 @@
 #include "vCamera.hpp"
 #include "vDevice.hpp"
 #include "vFrameInfo.hpp"
-#include "vGameObject.hpp"
 #include "vPipeline.hpp"
 
 #include <array>

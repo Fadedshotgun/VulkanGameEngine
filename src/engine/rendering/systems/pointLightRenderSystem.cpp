@@ -5,7 +5,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/constants.hpp>
 
-#include <map>
+#include <algorithm>
 
 #define RENDER_DISTANCE 100
 
@@ -20,6 +20,7 @@ namespace v
 
     PointLightRenderSystem::PointLightRenderSystem(vDevice &device, VkRenderPass renderPass, VkDescriptorSetLayout globalSetLayout)
         : device(device), renderPass(renderPass)
+
     {
         createPipelineLayout(globalSetLayout);
         createPipeline(this->renderPass, 0);
@@ -82,7 +83,7 @@ namespace v
         pipelineConfig.renderPass = renderPass;
         pipelineConfig.pipelineLayout = pipelineLayout;
 
-        pipeline = std::make_unique<vPipeline>(device, pipelineConfig, "../shaders/pointLight.vert.spv", "../shaders/pointLight.frag.spv");
+        pipeline = std::make_unique<vPipeline>(device, pipelineConfig,  std::string(PROJECT_ROOT) + "shaders/pointLight.vert.spv", std::string(PROJECT_ROOT) + "shaders/pointLight.frag.spv");
     }
 
     static float timePassed = 0.f;
@@ -91,29 +92,27 @@ namespace v
     {
         int lightIndex = 0;
 
-        auto rotateLight = glm::rotate(glm::mat4(1.f), frameInfo.frameTime*3, {0.f, -1.f, 0.f});
-        timePassed += frameInfo.frameTime*2;
+        auto rotateLight = glm::rotate(glm::mat4(1.f), frameInfo.frameTime * 3, {0.f, -1.f, 0.f});
+        timePassed += frameInfo.frameTime * 2;
         auto intensity = (glm::sin(timePassed) + 1.f) / 2.f;
 
-        for (auto &kv : frameInfo.gameObjects)
-        {
-            auto &obj = kv.second;
+        frameInfo.entityStore.forEach<ecs::PointLightComponent, ecs::TransformComponent>(
+            [&](ecs::PointLightComponent &pointLight, ecs::TransformComponent &transform)
+            {
+                if (lightIndex >= MAX_LIGHTS)
+                {
+                    return;
+                }
 
-            if (obj.pointLight == nullptr)
-                continue;
+                transform.translation = glm::vec3(rotateLight * glm::vec4(transform.translation, 1.f));
+                pointLight.intensity = intensity;
+                transform.scale = glm::vec3(intensity) * .1f + .05f;
 
-            if (lightIndex >= MAX_LIGHTS)
-                break;
+                ubo.pointLights[lightIndex].position = glm::vec4(transform.translation, 1.f);
+                ubo.pointLights[lightIndex].color = glm::vec4(pointLight.color, pointLight.intensity);
 
-            obj.transform.translation = glm::vec3(rotateLight * glm::vec4(obj.transform.translation, 1.f));
-            obj.pointLight->intensity = intensity;
-            obj.transform.scale = glm::vec3(intensity) * .1f + .05f;
-
-            ubo.pointLights[lightIndex].position = glm::vec4(obj.transform.translation, 1.f);
-            ubo.pointLights[lightIndex].color = glm::vec4(obj.color, obj.pointLight->intensity);
-
-            lightIndex++;
-        }
+                lightIndex++;
+            });
 
         ubo.numPointLights = lightIndex;
     }
@@ -126,17 +125,35 @@ namespace v
             createPipeline(renderPass, currentRasterMode);
         }
 
-        std::map<float, vGameObject::id_t> sorted;
-        for (auto &kv : frameInfo.gameObjects)
+        struct SortedPointLight
         {
-            auto &obj = kv.second;
-            if (obj.pointLight == nullptr)
-                continue;
+            float distanceSquared;
+            glm::vec3 translation;
+            glm::vec3 color;
+            float intensity;
+            float radius;
+        };
 
-            glm::vec3 offset = frameInfo.camera.getCurrentPosition() - obj.transform.translation;
-            float distanceSquared = glm::dot(offset, offset);
-            sorted[distanceSquared] = obj.getId();
-        }
+        std::vector<SortedPointLight> sorted;
+        frameInfo.entityStore.forEach<ecs::PointLightComponent, ecs::TransformComponent>(
+            [&](ecs::PointLightComponent &pointLight, ecs::TransformComponent &transform)
+            {
+                glm::vec3 offset = frameInfo.camera.getCurrentPosition() - transform.translation;
+                float distanceSquared = glm::dot(offset, offset);
+
+                sorted.push_back({
+                    distanceSquared,
+                    transform.translation,
+                    pointLight.color,
+                    pointLight.intensity,
+                    transform.scale.x,
+                });
+            });
+
+        std::sort(sorted.begin(), sorted.end(), [](const SortedPointLight &left, const SortedPointLight &right)
+        {
+            return left.distanceSquared > right.distanceSquared;
+        });
 
         glm::mat4 projectionView = frameInfo.camera.getProjection() * frameInfo.camera.getView();
 
@@ -144,14 +161,12 @@ namespace v
 
         vkCmdBindDescriptorSets(frameInfo.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &frameInfo.globalDescriptorSet, 0, nullptr);
 
-        for (auto ut = sorted.rbegin(); ut != sorted.rend(); ++ut)
+        for (const auto &pointLight : sorted)
         {
-            auto &obj = frameInfo.gameObjects.at(ut->second);
-
             PointLightPushConstants push{};
-            push.position = glm::vec4(obj.transform.translation, 1.f);
-            push.color = glm::vec4(obj.color, obj.pointLight->intensity);
-            push.radius = obj.transform.scale.x;
+            push.position = glm::vec4(pointLight.translation, 1.f);
+            push.color = glm::vec4(pointLight.color, pointLight.intensity);
+            push.radius = pointLight.radius;
 
             vkCmdPushConstants(frameInfo.commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(PointLightPushConstants), &push);
 

@@ -2,6 +2,7 @@
 
 #include "vCamera.hpp"
 #include "vGameObject.hpp"
+#include "EntityStore.hpp"
 
 #include <vulkan/vulkan.h>
 
@@ -30,7 +31,7 @@ namespace v
         VkCommandBuffer commandBuffer;
         vCamera &camera;
         VkDescriptorSet globalDescriptorSet;
-        vGameObject::Map &gameObjects;
+        ecs::EntityStore &entityStore;
         int rasterMode;
     };
 }

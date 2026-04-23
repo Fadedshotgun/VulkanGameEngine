@@ -14,6 +14,8 @@
 #include "vDescriptorSetLayout.hpp"
 #include "vDescriptorWriter.hpp"
 
+#include "EntityStore.hpp"
+
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
@@ -53,6 +55,8 @@ namespace v
         std::unique_ptr<vDescriptorPool> globalDescriptorPool{};
         std::unique_ptr<vDescriptorPool> textureDescriptorPool{};
         std::unique_ptr<vDescriptorSetLayout> textureSetLayout{};
+        ecs::EntityStore entityStore{};
+
         vGameObject::Map gameObjects{};
     };
 }

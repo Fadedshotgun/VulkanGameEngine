@@ -70,6 +70,20 @@ namespace v
         return model;
     }
 
+    std::shared_ptr<vModel> vModel::createSharedModelFromFile(vDevice &device, const std::string &filepath, vDescriptorSetLayout &setLayout, vDescriptorPool &pool)
+    {
+        auto model = createModelFromFile(device, filepath);
+        model->createTextureDescriptor(setLayout, pool);
+        return std::shared_ptr<vModel>(std::move(model));
+    }
+
+    std::shared_ptr<vModel> vModel::createSharedModelFromFile(vDevice &device, const std::string &filepath, const std::string &texturePath, vDescriptorSetLayout &setLayout, vDescriptorPool &pool)
+    {
+        auto model = createModelFromFile(device, filepath, texturePath);
+        model->createTextureDescriptor(setLayout, pool);
+        return std::shared_ptr<vModel>(std::move(model));
+    }
+
     void vModel::setTexture(std::shared_ptr<vTexture> texture)
     {
         this->texture = std::move(texture);
