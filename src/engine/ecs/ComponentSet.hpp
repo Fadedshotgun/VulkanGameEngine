@@ -41,6 +41,17 @@ namespace ecs
         const std::vector<Entity> &entities() const { return denseSet; }
         size_t size() const { return denseSet.size(); }
 
+        Component &getByIndex(size_t i)
+        {
+            assert(i < denseComponents.size() && "Index out of range");
+            return denseComponents[i];
+        }
+        const Component &getByIndex(size_t i) const
+        {
+            assert(i < denseComponents.size() && "Index out of range");
+            return denseComponents[i];
+        }
+
         void insert(Entity entity, Component component)
         {
             if (has(entity))

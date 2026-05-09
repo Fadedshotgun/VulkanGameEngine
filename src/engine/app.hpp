@@ -55,8 +55,7 @@ namespace v
         std::unique_ptr<vDescriptorPool> globalDescriptorPool{};
         std::unique_ptr<vDescriptorPool> textureDescriptorPool{};
         std::unique_ptr<vDescriptorSetLayout> textureSetLayout{};
+        
         ecs::EntityStore entityStore{};
-
-        vGameObject::Map gameObjects{};
     };
 }

@@ -2,7 +2,7 @@
 
 namespace v
 {
-    void MovementController::mouseMoved(GLFWwindow *window, double xpos, double ypos, vGameObject &gameObject)
+    void MovementController::mouseMoved(GLFWwindow *window, double xpos, double ypos, ecs::EntityHandle &entityHandle)
     {
         glm::vec3 rotate{0};
 
@@ -20,7 +20,8 @@ namespace v
 
         if (glm::dot(rotate, rotate) > std::numeric_limits<float>::epsilon())
         {
-            gameObject.transform.rotation += sensitivity * rotate;
+            auto &transform = entityHandle.getComponent<ecs::TransformComponent>();
+            transform.rotation += sensitivity * rotate;
         }
     }
 
@@ -29,13 +30,15 @@ namespace v
         moveSpeed = glm::max(0.0, moveSpeed + (yOffset / 2));
     }
 
-    void MovementController::moveRelative(GLFWwindow *window, float deltaTime, vGameObject &gameObject)
+    void MovementController::moveRelative(GLFWwindow *window, float deltaTime, ecs::EntityHandle &entityHandle)
     {
 
-        gameObject.transform.rotation.x = glm::clamp(gameObject.transform.rotation.x, -1.5f, 1.5f);
-        gameObject.transform.rotation.y = glm::mod(gameObject.transform.rotation.y, glm::two_pi<float>());
+        auto &transform = entityHandle.getComponent<ecs::TransformComponent>();
 
-        float yaw = gameObject.transform.rotation.y;
+        transform.rotation.x = glm::clamp(transform.rotation.x, -1.5f, 1.5f);
+        transform.rotation.y = glm::mod(transform.rotation.y, glm::two_pi<float>());
+
+        float yaw = transform.rotation.y;
         const glm::vec3 forwardDirection{sin(yaw), 0.f, cos(yaw)};
         const glm::vec3 rightDirection = {forwardDirection.z, 0.f, -forwardDirection.x};
         const glm::vec3 upDirection = {0.f, -1.f, 0.f};
@@ -57,7 +60,7 @@ namespace v
 
         if (glm::dot(moveDirection, moveDirection) > std::numeric_limits<float>::epsilon())
         {
-            gameObject.transform.translation += moveSpeed * deltaTime * glm::normalize(moveDirection);
+            transform.translation += moveSpeed * deltaTime * glm::normalize(moveDirection);
         }
     }
 

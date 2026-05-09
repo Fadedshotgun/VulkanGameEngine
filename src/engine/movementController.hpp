@@ -2,6 +2,8 @@
 
 #include "vGameObject.hpp"
 #include "vWindow.hpp"
+#include "EntityStore.hpp"
+#include "EntityHandle.hpp"
 
 namespace v
 {
@@ -23,8 +25,8 @@ namespace v
         };
 
         void scrollMoved(GLFWwindow *window, double yOffset);
-        void moveRelative(GLFWwindow *window, float deltaTime, vGameObject &vGameObject);
-        void mouseMoved(GLFWwindow *window, double xpos, double ypos, vGameObject &gameObject);
+        void moveRelative(GLFWwindow *window, float deltaTime, ecs::EntityHandle &entityHandle);
+        void mouseMoved(GLFWwindow *window, double xpos, double ypos, ecs::EntityHandle &entityHandle);
         void hotkeys(GLFWwindow *window, int &lineMode);
 
       private:

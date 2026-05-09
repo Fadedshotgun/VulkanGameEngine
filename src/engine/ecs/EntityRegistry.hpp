@@ -3,7 +3,6 @@
 #include "ComponentSet.hpp"
 
 #include <memory>
-#include <queue>
 #include <typeindex>
 #include <unordered_map>
 #include <functional>
@@ -16,14 +15,14 @@ namespace ecs
     class EntityRegistry
     {
       public:
-                static constexpr Entity MAX_ENTITIES = 5000;
+        static constexpr Entity MAX_ENTITIES = 5000;
 
         Entity createEntity()
         {
             if (!availableEntities.empty())
             {
-                Entity id = availableEntities.front();
-                availableEntities.pop();
+                Entity id = availableEntities.back();
+                availableEntities.pop_back();
                 return id;
             }
 
@@ -42,7 +41,7 @@ namespace ecs
                 set->entityDestroyed(entity);
             }
 
-            availableEntities.push(entity);
+            availableEntities.push_back(entity);
         }
 
         template <typename Component>
@@ -72,25 +71,25 @@ namespace ecs
         }
 
         template <typename Component>
-        Component& tryGetComponent(Entity entity)
+        Component* tryGetComponent(Entity entity)
         {
-            auto& set = getComponentSet<Component>();
-            if (!set.has(entity))
-            {
-                return nullptr;
-            }
-            return set.getComponentOf(entity);
+            auto key = std::type_index(typeid(Component));
+            auto it = componentSets.find(key);
+            if (it == componentSets.end()) return nullptr;
+            auto& set = *static_cast<ComponentSet<Component>*>(it->second.get());
+            if (!set.has(entity)) return nullptr;
+            return &set.getComponentOf(entity);
         }
 
         template <typename Component>
-        const Component& tryGetComponent(Entity entity) const
+        const Component* tryGetComponent(Entity entity) const
         {
-            auto& set = getComponentSet<Component>();
-            if (!set.has(entity))
-            {
-                return nullptr;
-            }
-            return set.getComponentOf(entity);
+            auto key = std::type_index(typeid(Component));
+            auto it = componentSets.find(key);
+            if (it == componentSets.end()) return nullptr;
+            auto& set = *static_cast<const ComponentSet<Component>*>(it->second.get());
+            if (!set.has(entity)) return nullptr;
+            return &set.getComponentOf(entity);
         }
 
         template <typename Component>
@@ -106,19 +105,26 @@ namespace ecs
         void forEach(FunctionToCall&& function, Args&&... args)
         {
             auto& firstSet = getComponentSet<FirstComponent>();
-            for (Entity entity : firstSet.entities())
-            {
-                if ((hasComponent<Components>(entity) && ...))
-                {
-                    auto &first = firstSet.getComponentOf(entity);
+            // Cache secondary set pointers once — avoids per-entity hash map lookups
+            auto secondarySets = std::make_tuple(&getComponentSet<Components>()...);
 
+            for (size_t i = 0; i < firstSet.size(); i++)
+            {
+                Entity entity = firstSet.entities()[i];
+                if ((std::get<ComponentSet<Components>*>(secondarySets)->has(entity) && ...))
+                {
+                    FirstComponent& first = firstSet.getByIndex(i); // direct index, no sparse lookup
                     if constexpr (std::is_invocable_v<FunctionToCall, Entity, FirstComponent&, Components&..., Args&&...>) // function (entity, components, args...)
                     {
-                        std::invoke(std::forward<FunctionToCall>(function), entity, first, getComponent<Components>(entity)..., std::forward<Args>(args)...);
+                        std::invoke(std::forward<FunctionToCall>(function), entity, first,
+                            std::get<ComponentSet<Components>*>(secondarySets)->getComponentOf(entity)...,
+                            std::forward<Args>(args)...);
                     }
                     else // function (components, args...)
                     {
-                        std::invoke(std::forward<FunctionToCall>(function), first, getComponent<Components>(entity)..., std::forward<Args>(args)...);
+                        std::invoke(std::forward<FunctionToCall>(function), first,
+                            std::get<ComponentSet<Components>*>(secondarySets)->getComponentOf(entity)...,
+                            std::forward<Args>(args)...);
                     }
                 }
             }
@@ -126,7 +132,7 @@ namespace ecs
 
       private:
         uint32_t nextEntityId = 0;
-        std::queue<Entity> availableEntities;
+        std::vector<Entity> availableEntities;
         std::unordered_map<std::type_index, std::unique_ptr<BaseComponentSet>> componentSets;
 
         template <typename Component>

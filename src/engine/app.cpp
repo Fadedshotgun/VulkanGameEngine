@@ -1,5 +1,8 @@
 #include "app.hpp"
 
+#include "SceneLoader.hpp"
+#include "Camera.hpp"
+#include "CameraSystem.hpp"
 #include "vTexture.hpp"
 
 #define MAX_FRAME_TIME .1f
@@ -38,14 +41,15 @@ namespace v
         textureSetLayout = vDescriptorSetLayout::Builder{device}
                                .addBinding(0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
                                .build();
-
-        loadGameObjects();
     }
 
     vApp::~vApp() {}
 
     void vApp::run()
     {
+        scene::SceneLoader sceneLoader{device, *textureSetLayout, *textureDescriptorPool};
+        sceneLoader.loadScene(std::string(PROJECT_ROOT) + "testScene.json", entityStore);
+
         std::vector<std::unique_ptr<vBuffer>> uniformBuffers{vSwapChain::MAX_FRAMES_IN_FLIGHT};
         for (int i = 0; i < vSwapChain::MAX_FRAMES_IN_FLIGHT; i++)
         {
@@ -90,10 +94,17 @@ namespace v
         auto currentTime = std::chrono::high_resolution_clock::now();
 
         MovementController movementController{};
-        vCamera currentCamera{};
-        vGameObject cameraObject = vGameObject::createGameObject();
-        cameraObject.transform.translation.z = -2.5f;
-        cameraObject.transform.translation.y = -1.f;
+        Entity cameraEntity;
+
+        entityStore.forEach<ecs::CameraComponent>([&](auto entity, auto &cameraComponent) {
+            if (cameraComponent.active)
+            {
+                cameraEntity = entity;
+            }
+        });
+
+        ecs::EntityHandle cameraHandle = entityStore.getEntityHandle(cameraEntity);
+        vCamera &currentCamera = cameraHandle.getComponent<ecs::CameraComponent>().camera;
 
         while (!window.shouldClose())
         {
@@ -106,15 +117,13 @@ namespace v
             frameTime = glm::min(frameTime, MAX_FRAME_TIME); // CAP MINIMUM FPS TO 10
             countFps(frameTime, renderSystem);
 
-            movementController.moveRelative(window.getGLFWwindow(), frameTime, cameraObject);
-            movementController.mouseMoved(window.getGLFWwindow(), window.mouseMovementX, window.mouseMovementY, cameraObject);
+            movementController.moveRelative(window.getGLFWwindow(), frameTime, cameraHandle);
+            movementController.mouseMoved(window.getGLFWwindow(), window.mouseMovementX, window.mouseMovementY, cameraHandle);
             movementController.scrollMoved(window.getGLFWwindow(), window.scrollY);
             movementController.hotkeys(window.getGLFWwindow(), renderMode);
 
-            currentCamera.setViewYXZ(cameraObject.transform.translation, cameraObject.transform.rotation);
-
             float aspect = renderer.getAspectRatio();
-            currentCamera.setPerspectiveProjection(glm::radians(80.f), aspect, .1f, 1000.f);
+            ecs::CameraSystem::update(entityStore, aspect);
 
             if (auto commandBuffer = renderer.beginFrame())
             {
@@ -148,82 +157,76 @@ namespace v
         vkDeviceWaitIdle(device.device());
     }
 
-    void vApp::loadGameObjects()
-    {
-        auto floor = entityStore.createEntity();
-        floor.addComponent<ecs::MeshRendererComponent>({
-            vModel::createSharedModelFromFile(
-                device,
-                std::string(PROJECT_ROOT) + "models/quad.obj",
-                std::string(PROJECT_ROOT) + "textures/huhdog.jpg",
-                *textureSetLayout,
-                *textureDescriptorPool)
-        });
-        floor.addComponent<ecs::TransformComponent>({.translation = {0.f, 0.f, 0.f}, .scale = {1.f, 1.f, 1.f}});
+    // void vApp::loadGameObjects()
+    // {
+    //     auto floor = entityStore.createEntity();
+    //     floor.addComponent<ecs::MeshRendererComponent>({vModel::createSharedModelFromFile(
+    //         device,
+    //         std::string(PROJECT_ROOT) + "models/quad.obj",
+    //         std::string(PROJECT_ROOT) + "textures/huhdog.jpg",
+    //         *textureSetLayout,
+    //         *textureDescriptorPool)});
+    //     floor.addComponent<ecs::TransformComponent>({.translation = {0.f, 0.f, 0.f}, .scale = {1.f, 1.f, 1.f}});
 
-        auto vase = entityStore.createEntity();
-        vase.addComponent<ecs::MeshRendererComponent>({
-            vModel::createSharedModelFromFile(
-                device,
-                std::string(PROJECT_ROOT) + "models/smooth_vase.obj",
-                *textureSetLayout,
-                *textureDescriptorPool)
-        });
-        vase.addComponent<ecs::TransformComponent>({.translation = {1.f, 0.f, 0.f}, .scale = {1.f, 1.f, 1.f}});
+    //     auto vase = entityStore.createEntity();
+    //     vase.addComponent<ecs::MeshRendererComponent>({vModel::createSharedModelFromFile(
+    //         device,
+    //         std::string(PROJECT_ROOT) + "models/smooth_vase.obj",
+    //         *textureSetLayout,
+    //         *textureDescriptorPool)});
+    //     vase.addComponent<ecs::TransformComponent>({.translation = {1.f, 0.f, 0.f}, .scale = {1.f, 1.f, 1.f}});
 
-        auto vase2 = entityStore.createEntity();
-        vase2.addComponent<ecs::MeshRendererComponent>({
-            vModel::createSharedModelFromFile(
-                device,
-                std::string(PROJECT_ROOT) + "models/flat_vase.obj",
-                *textureSetLayout,
-                *textureDescriptorPool)
-        });
-        vase2.addComponent<ecs::TransformComponent>({.translation = {-1.f, 0.f, 0.f}, .scale = {1.f, 1.f, 1.f}});
+    //     auto vase2 = entityStore.createEntity();
+    //     vase2.addComponent<ecs::MeshRendererComponent>({vModel::createSharedModelFromFile(
+    //         device,
+    //         std::string(PROJECT_ROOT) + "models/flat_vase.obj",
+    //         *textureSetLayout,
+    //         *textureDescriptorPool)});
+    //     vase2.addComponent<ecs::TransformComponent>({.translation = {-1.f, 0.f, 0.f}, .scale = {1.f, 1.f, 1.f}});
 
-        // std::string path = std::string(PROJECT_ROOT) + "models/smooth_vase.obj";
-        // std::shared_ptr<vModel> model = vModel::createModelFromFile(device, path);
+    //     // std::string path = std::string(PROJECT_ROOT) + "models/smooth_vase.obj";
+    //     // std::shared_ptr<vModel> model = vModel::createModelFromFile(device, path);
 
-        // std::string path2 = std::string(PROJECT_ROOT) + "models/flat_vase.obj";
-        // std::shared_ptr<vModel> model2 = vModel::createModelFromFile(device, path2);
+    //     // std::string path2 = std::string(PROJECT_ROOT) + "models/flat_vase.obj";
+    //     // std::shared_ptr<vModel> model2 = vModel::createModelFromFile(device, path2);
 
-        // std::string path3 = std::string(PROJECT_ROOT) + "models/quad.obj";
-        // std::string path4 = std::string(PROJECT_ROOT) + "textures/huhdog.jpg";
-        // std::shared_ptr<vModel> model3 = vModel::createModelFromFile(device, path3, path4);
-        // model3->createTextureDescriptor(*textureSetLayout, *textureDescriptorPool);
+    //     // std::string path3 = std::string(PROJECT_ROOT) + "models/quad.obj";
+    //     // std::string path4 = std::string(PROJECT_ROOT) + "textures/huhdog.jpg";
+    //     // std::shared_ptr<vModel> model3 = vModel::createModelFromFile(device, path3, path4);
+    //     // model3->createTextureDescriptor(*textureSetLayout, *textureDescriptorPool);
 
-        // vGameObject gameObject = vGameObject::createGameObject();
-        // gameObject.model = model;
-        // gameObject.transform.translation = {1.f, 0.f, 0.f};
-        // gameObject.transform.scale = {1.f, 1.f, 1.f};
+    //     // vGameObject gameObject = vGameObject::createGameObject();
+    //     // gameObject.model = model;
+    //     // gameObject.transform.translation = {1.f, 0.f, 0.f};
+    //     // gameObject.transform.scale = {1.f, 1.f, 1.f};
 
-        // vGameObject gameObject2 = vGameObject::createGameObject();
-        // gameObject2.model = model2;
-        // gameObject2.transform.translation = {-0.f, 0.f, 0.f};
-        // gameObject2.transform.scale = {1.f, 1.f, 1.f};
+    //     // vGameObject gameObject2 = vGameObject::createGameObject();
+    //     // gameObject2.model = model2;
+    //     // gameObject2.transform.translation = {-0.f, 0.f, 0.f};
+    //     // gameObject2.transform.scale = {1.f, 1.f, 1.f};
 
-        // vGameObject floor = vGameObject::createGameObject();
-        // floor.model = model3;
-        // floor.transform.translation = {0.f, 0.f, 0.f};
-        // floor.transform.scale = {1.f, 1.f, 1.f};
+    //     // vGameObject floor = vGameObject::createGameObject();
+    //     // floor.model = model3;
+    //     // floor.transform.translation = {0.f, 0.f, 0.f};
+    //     // floor.transform.scale = {1.f, 1.f, 1.f};
 
-        std::vector<glm::vec3> lightColors{
-            {1.f, .1f, .1f},
-            {.1f, .1f, 1.f},
-            {.1f, 1.f, .1f},
-            {1.f, 1.f, .1f},
-            {.1f, 1.f, 1.f},
-            {1.f, 1.f, 1.f} //
-        };
+    //     std::vector<glm::vec3> lightColors{
+    //         {1.f, .1f, .1f},
+    //         {.1f, .1f, 1.f},
+    //         {.1f, 1.f, .1f},
+    //         {1.f, 1.f, .1f},
+    //         {.1f, 1.f, 1.f},
+    //         {1.f, 1.f, 1.f} //
+    //     };
 
-        for (int i = 0; i < lightColors.size(); i++)
-        {
-            auto rotateLight = glm::rotate(glm::mat4(1.f), (float)i / lightColors.size() * glm::two_pi<float>(), {0.f, 1.f, 0.f});
-            auto translation = glm::vec3(rotateLight * glm::vec4(-1.f, -1.f, -1.f, 1.f));
+    //     for (int i = 0; i < lightColors.size(); i++)
+    //     {
+    //         auto rotateLight = glm::rotate(glm::mat4(1.f), (float)i / lightColors.size() * glm::two_pi<float>(), {0.f, 1.f, 0.f});
+    //         auto translation = glm::vec3(rotateLight * glm::vec4(-1.f, -1.f, -1.f, 1.f));
 
-            auto pointLight = entityStore.createEntity();
-            pointLight.addComponent<ecs::PointLightComponent>({.color = lightColors[i]});
-            pointLight.addComponent<ecs::TransformComponent>({.translation = translation, .scale = {.1f, .1f, .1f}});
-        }
-    }
+    //         auto pointLight = entityStore.createEntity();
+    //         pointLight.addComponent<ecs::PointLightComponent>({.color = lightColors[i]});
+    //         pointLight.addComponent<ecs::TransformComponent>({.translation = translation, .scale = {.1f, .1f, .1f}});
+    //     }
+    // }
 }

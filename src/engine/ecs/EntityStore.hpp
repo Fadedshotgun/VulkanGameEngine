@@ -12,6 +12,7 @@ namespace ecs {
     {
       public:
         EntityHandle createEntity() { return EntityHandle{registry, registry.createEntity()}; }
+        EntityHandle getEntityHandle(Entity id) { return EntityHandle{registry, id}; }
         void destroyEntity(EntityHandle entity) { registry.destroyEntity(entity.id()); }
 
         template <typename FirstComponent, typename... Components, typename FunctionToCall, typename... Args>
