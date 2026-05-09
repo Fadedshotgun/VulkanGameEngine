@@ -131,7 +131,9 @@ namespace scene
             }
 
             const auto &components = entityJson["components"];
+            std::string name = entityJson.value("name", std::string{});
             Entity entity = registry.createEntity();
+            registry.setName(entity, name);
 
             for (const auto &compJson : components)
             {

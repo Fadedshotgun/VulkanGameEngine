@@ -1,8 +1,8 @@
 #pragma once
 
-#include "vWindow.hpp"
-#include "EntityRegistry.hpp"
 #include "Components.hpp"
+#include "EntityRegistry.hpp"
+#include "vWindow.hpp"
 
 namespace v
 {
@@ -23,14 +23,14 @@ namespace v
             int lookDown = GLFW_KEY_DOWN;
         };
 
-        void scrollMoved(GLFWwindow *window, double yOffset);
+        void scrollMoved(GLFWwindow *window, double yOffset, ecs::EntityRegistry &entityRegistry, Entity entity);
         void moveRelative(GLFWwindow *window, float deltaTime, ecs::EntityRegistry &entityRegistry, Entity entity);
         void mouseMoved(GLFWwindow *window, double xpos, double ypos, ecs::EntityRegistry &entityRegistry, Entity entity);
         void hotkeys(GLFWwindow *window, int &lineMode);
 
       private:
         KeyMappings keys{};
-        float moveSpeed{3.f};
+        float moveSpeed{5.f};
         float sensitivity{0.1f};
         double lastX, lastY;
 

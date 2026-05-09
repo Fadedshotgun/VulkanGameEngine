@@ -40,6 +40,7 @@ namespace v
         void endFrame();
         void beginSwapChain(VkCommandBuffer commandBuffer);
         void endSwapChain(VkCommandBuffer commandBuffer);
+        void editRenderArea(VkCommandBuffer commandBuffer, glm::vec4 offsetFromBorders);
 
       private:
         void createCommandBuffers();

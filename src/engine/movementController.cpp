@@ -30,9 +30,10 @@ namespace v
         }
     }
 
-    void MovementController::scrollMoved(GLFWwindow *window, double yOffset)
+    void MovementController::scrollMoved(GLFWwindow *window, double yOffset, ecs::EntityRegistry &entityRegistry, Entity entity)
     {
-        moveSpeed = glm::max(0.0, moveSpeed + (yOffset / 2));
+        ecs::TransformComponent &transform = entityRegistry.getComponent<ecs::TransformComponent>(entity);
+        transform.translation += 2 * static_cast<float>(yOffset) * glm::vec3{transform.mat4()[2]};
     }
 
     void MovementController::moveRelative(GLFWwindow *window, float deltaTime, ecs::EntityRegistry &entityRegistry, Entity entity)
@@ -44,9 +45,9 @@ namespace v
         transform.rotation.y = glm::mod(transform.rotation.y, glm::two_pi<float>());
 
         float yaw = transform.rotation.y;
-        const glm::vec3 forwardDirection{sin(yaw), 0.f, cos(yaw)};
-        const glm::vec3 rightDirection = {forwardDirection.z, 0.f, -forwardDirection.x};
-        const glm::vec3 upDirection = {0.f, -1.f, 0.f};
+        const glm::vec3 forwardDirection{transform.mat4()[2]};
+        const glm::vec3 rightDirection = {transform.mat4()[0]};
+        const glm::vec3 upDirection = {transform.mat4()[1]};
 
         glm::vec3 moveDirection{0};
 

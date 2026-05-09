@@ -41,6 +41,7 @@ namespace v
         void freeDescriptors(std::vector<VkDescriptorSet> &descriptors) const;
 
         void resetPool();
+        VkDescriptorPool getDescriptorPool() const { return descriptorPool; }
 
       private:
         vDevice &device;

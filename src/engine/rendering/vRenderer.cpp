@@ -121,6 +121,23 @@ namespace v
         currentFrameIndex = (currentFrameIndex + 1) % vSwapChain::MAX_FRAMES_IN_FLIGHT;
     }
 
+    void vRenderer::editRenderArea(VkCommandBuffer commandBuffer, glm::vec4 offsetFromBorders)
+    {
+        VkViewport viewport{};
+        viewport.x = offsetFromBorders.x;
+        viewport.y = offsetFromBorders.y;
+        viewport.width = offsetFromBorders.z;
+        viewport.height = offsetFromBorders.w;
+        viewport.minDepth = 0.0f;
+        viewport.maxDepth = 1.0f;
+        vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
+
+        VkRect2D scissor{};
+        scissor.offset = {static_cast<int32_t>(offsetFromBorders.x), static_cast<int32_t>(offsetFromBorders.y)};
+        scissor.extent = {static_cast<uint32_t>(offsetFromBorders.z), static_cast<uint32_t>(offsetFromBorders.w)};
+        vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
+    }
+
     void vRenderer::beginSwapChain(VkCommandBuffer commandBuffer)
     {
         assert(isFrameStarted && "Cannot call beginSwapChain if frame not in progress");
@@ -146,8 +163,8 @@ namespace v
         VkViewport viewport{};
         viewport.x = 0.0f;
         viewport.y = 0.0f;
-        viewport.width = static_cast<float>(swapChain->getSwapChainExtent().width);
-        viewport.height = static_cast<float>(swapChain->getSwapChainExtent().height);
+        viewport.width = static_cast<float>(swapChain->getSwapChainExtent().width);   // - 50;
+        viewport.height = static_cast<float>(swapChain->getSwapChainExtent().height); // - 50;
         viewport.minDepth = 0.0f;
         viewport.maxDepth = 1.0f;
         VkRect2D scissor{{0, 0}, swapChain->getSwapChainExtent()};
