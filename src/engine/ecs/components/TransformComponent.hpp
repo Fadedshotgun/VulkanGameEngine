@@ -11,7 +11,7 @@ namespace ecs
         glm::vec3 scale{1.f, 1.f, 1.f};
         glm::vec3 rotation{};
 
-        glm::mat4 mat4() const
+        glm::mat4 mat4() const // up, right, forward, translation
         {
             const float c3 = glm::cos(rotation.z);
             const float s3 = glm::sin(rotation.z);

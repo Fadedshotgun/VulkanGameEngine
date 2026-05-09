@@ -1,8 +1,8 @@
 #pragma once
 
 #include "vCamera.hpp"
-#include "vGameObject.hpp"
-#include "EntityStore.hpp"
+#include "Components.hpp"
+#include "EntityRegistry.hpp"
 
 #include <vulkan/vulkan.h>
 
@@ -31,7 +31,7 @@ namespace v
         VkCommandBuffer commandBuffer;
         vCamera &camera;
         VkDescriptorSet globalDescriptorSet;
-        ecs::EntityStore &entityStore;
+        ecs::EntityRegistry &entityRegistry;
         int rasterMode;
     };
 }

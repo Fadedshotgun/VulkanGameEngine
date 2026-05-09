@@ -3,7 +3,6 @@
 #include "hash.hpp"
 #include "vCamera.hpp"
 #include "vDevice.hpp"
-#include "vGameObject.hpp"
 #include "vPipeline.hpp"
 #include "vFrameInfo.hpp"
 

@@ -93,7 +93,7 @@ namespace v
 
         vModel *lastBoundModel = nullptr;
 
-        frameInfo.entityStore.forEach<ecs::MeshRendererComponent, ecs::TransformComponent>([&](ecs::MeshRendererComponent &mesh, ecs::TransformComponent &transform)
+        frameInfo.entityRegistry.forEach<ecs::MeshRendererComponent, ecs::TransformComponent>([&](ecs::MeshRendererComponent &mesh, ecs::TransformComponent &transform)
         {
             if (!mesh.active) return;
             if (mesh.model == nullptr) return;

@@ -3,7 +3,6 @@
 #include "hash.hpp"
 #include "vCamera.hpp"
 #include "vDevice.hpp"
-#include "vGameObject.hpp"
 #include "defaultRenderSystem.hpp"
 #include "pointLightRenderSystem.hpp"
 #include "vRenderer.hpp"
@@ -14,7 +13,7 @@
 #include "vDescriptorSetLayout.hpp"
 #include "vDescriptorWriter.hpp"
 
-#include "EntityStore.hpp"
+#include "EntityRegistry.hpp"
 
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
@@ -56,6 +55,6 @@ namespace v
         std::unique_ptr<vDescriptorPool> textureDescriptorPool{};
         std::unique_ptr<vDescriptorSetLayout> textureSetLayout{};
         
-        ecs::EntityStore entityStore{};
+        ecs::EntityRegistry entityRegistry{};
     };
 }

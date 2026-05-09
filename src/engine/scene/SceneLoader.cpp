@@ -1,9 +1,6 @@
 #include "SceneLoader.hpp"
 
-#include "Camera.hpp"
-#include "MeshRenderer.hpp"
-#include "PointLight.hpp"
-#include "Transform.hpp"
+#include "Components.hpp"
 #include "vModel.hpp"
 
 #define GLM_FORCE_RADIANS
@@ -49,7 +46,7 @@ namespace scene
         };
     }
 
-    void SceneLoader::parseComponent(const std::string &typeName, const nlohmann::json &data, ecs::EntityHandle entity)
+    void SceneLoader::parseComponent(const std::string &typeName, const nlohmann::json &data, ecs::EntityRegistry &registry, Entity entity)
     {
         if (typeName == "Transform")
         {
@@ -57,7 +54,7 @@ namespace scene
             const glm::vec3 rotation = readVec3(data, "rotation", {0.f, 0.f, 0.f});
             const glm::vec3 scale = readVec3(data, "scale", {1.f, 1.f, 1.f});
 
-            entity.addComponent<ecs::TransformComponent>({translation, scale, rotation});
+            registry.addComponent<ecs::TransformComponent>(entity, {translation, scale, rotation});
         }
         else if (typeName == "Camera")
         {
@@ -67,7 +64,7 @@ namespace scene
             camera.farPlane = data.value("farPlane", camera.farPlane);
             camera.active = data.value("active", camera.active);
 
-            entity.addComponent<ecs::CameraComponent>(camera);
+            registry.addComponent<ecs::CameraComponent>(entity, camera);
         }
         else if (typeName == "MeshRenderer")
         {
@@ -99,7 +96,7 @@ namespace scene
                     model = v::vModel::createSharedModelFromFile(device, absoluteModelPath, absoluteTexturePath, textureSetLayout, textureDescriptorPool);
                 }
 
-                entity.addComponent<ecs::MeshRendererComponent>({model, active});
+                registry.addComponent<ecs::MeshRendererComponent>(entity, {model, active});
             }
             catch (const std::exception &error)
             {
@@ -111,7 +108,7 @@ namespace scene
             const glm::vec3 color = readVec3(data, "color", {1.f, 1.f, 1.f});
             const float intensity = data.value("intensity", 1.f);
 
-            entity.addComponent<ecs::PointLightComponent>({color, intensity});
+            registry.addComponent<ecs::PointLightComponent>(entity, {color, intensity});
         }
         else
         {
@@ -119,7 +116,7 @@ namespace scene
         }
     }
 
-    void SceneLoader::loadSceneFromFileStream(std::ifstream &stream, ecs::EntityStore &store)
+    void SceneLoader::loadSceneFromFileStream(std::ifstream &stream, ecs::EntityRegistry &registry)
     {
         nlohmann::json root;
         stream >> root;
@@ -134,7 +131,7 @@ namespace scene
             }
 
             const auto &components = entityJson["components"];
-            auto entity = store.createEntity();
+            Entity entity = registry.createEntity();
 
             for (const auto &compJson : components)
             {
@@ -145,12 +142,12 @@ namespace scene
 
                 const std::string typeName = compJson["type"].get<std::string>();
                 const nlohmann::json data = compJson.value("data", nlohmann::json::object());
-                parseComponent(typeName, data, entity);
+                parseComponent(typeName, data, registry, entity);
             }
         }
     }
 
-    void SceneLoader::loadScene(const std::string &sceneFilePath, ecs::EntityStore &store)
+    void SceneLoader::loadScene(const std::string &sceneFilePath, ecs::EntityRegistry &registry)
     {
         try
         {
@@ -166,7 +163,7 @@ namespace scene
                 throw std::runtime_error("Unable to open scene file: " + sceneFilePath);
             }
 
-            loadSceneFromFileStream(stream, store);
+            loadSceneFromFileStream(stream, registry);
         }
         catch (const std::exception &e)
         {

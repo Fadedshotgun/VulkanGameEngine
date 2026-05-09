@@ -17,9 +17,9 @@ namespace ecs
         cameraComponent.camera.setPerspectiveProjection(glm::radians(cameraComponent.fovDegrees), aspectRatio, cameraComponent.nearPlane, cameraComponent.farPlane);
     }
 
-    void CameraSystem::update(EntityStore &store, float aspectRatio)
+    void CameraSystem::update(EntityRegistry &registry, float aspectRatio)
     {
 
-        store.forEach<CameraComponent, TransformComponent>(updateCamera, aspectRatio);
+        registry.forEach<CameraComponent, TransformComponent>(updateCamera, aspectRatio);
     }
 }

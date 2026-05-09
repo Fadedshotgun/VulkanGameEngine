@@ -2,8 +2,13 @@
 
 namespace v
 {
-    void MovementController::mouseMoved(GLFWwindow *window, double xpos, double ypos, ecs::EntityHandle &entityHandle)
+    void MovementController::mouseMoved(GLFWwindow *window, double xpos, double ypos, ecs::EntityRegistry &entityRegistry, Entity entity)
     {
+        if (glfwGetInputMode(window, GLFW_CURSOR) == GLFW_CURSOR_NORMAL)
+        {
+            return;
+        }
+
         glm::vec3 rotate{0};
 
         rotate.y += xpos * sensitivity;
@@ -20,7 +25,7 @@ namespace v
 
         if (glm::dot(rotate, rotate) > std::numeric_limits<float>::epsilon())
         {
-            auto &transform = entityHandle.getComponent<ecs::TransformComponent>();
+            ecs::TransformComponent &transform = entityRegistry.getComponent<ecs::TransformComponent>(entity);
             transform.rotation += sensitivity * rotate;
         }
     }
@@ -30,10 +35,10 @@ namespace v
         moveSpeed = glm::max(0.0, moveSpeed + (yOffset / 2));
     }
 
-    void MovementController::moveRelative(GLFWwindow *window, float deltaTime, ecs::EntityHandle &entityHandle)
+    void MovementController::moveRelative(GLFWwindow *window, float deltaTime, ecs::EntityRegistry &entityRegistry, Entity entity)
     {
 
-        auto &transform = entityHandle.getComponent<ecs::TransformComponent>();
+        ecs::TransformComponent &transform = entityRegistry.getComponent<ecs::TransformComponent>(entity);
 
         transform.rotation.x = glm::clamp(transform.rotation.x, -1.5f, 1.5f);
         transform.rotation.y = glm::mod(transform.rotation.y, glm::two_pi<float>());
@@ -83,6 +88,15 @@ namespace v
         else if (glfwGetKey(window, GLFW_KEY_F) == GLFW_RELEASE)
         {
             releasedLast = true;
+        }
+
+        if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS)
+        {
+            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+        }
+        else
+        {
+            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
         }
     }
 }

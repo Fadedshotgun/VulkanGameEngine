@@ -96,7 +96,7 @@ namespace v
         timePassed += frameInfo.frameTime * 2;
         auto intensity = (glm::sin(timePassed) + 1.f) / 2.f;
 
-        frameInfo.entityStore.forEach<ecs::PointLightComponent, ecs::TransformComponent>(
+        frameInfo.entityRegistry.forEach<ecs::PointLightComponent, ecs::TransformComponent>(
             [&](ecs::PointLightComponent &pointLight, ecs::TransformComponent &transform)
             {
                 if (lightIndex >= MAX_LIGHTS)
@@ -135,7 +135,7 @@ namespace v
         };
 
         std::vector<SortedPointLight> sorted;
-        frameInfo.entityStore.forEach<ecs::PointLightComponent, ecs::TransformComponent>(
+        frameInfo.entityRegistry.forEach<ecs::PointLightComponent, ecs::TransformComponent>(
             [&](ecs::PointLightComponent &pointLight, ecs::TransformComponent &transform)
             {
                 glm::vec3 offset = frameInfo.camera.getCurrentPosition() - transform.translation;

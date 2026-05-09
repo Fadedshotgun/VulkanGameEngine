@@ -7,7 +7,9 @@
 #include <fstream>
 #include <iostream>
 
-#include "EntityStore.hpp"
+#include "EntityRegistry.hpp"
+#include "Components.hpp"
+
 #include "vDevice.hpp"
 #include "vDescriptorSetLayout.hpp"
 #include "vDescriptorPool.hpp"
@@ -19,7 +21,7 @@ namespace scene
       public:
         SceneLoader(v::vDevice &device, v::vDescriptorSetLayout &textureSetLayout, v::vDescriptorPool &textureDescriptorPool) : device{device}, textureSetLayout{textureSetLayout}, textureDescriptorPool{textureDescriptorPool} {}
 
-        void loadScene(const std::string &sceneFilePath, ecs::EntityStore &store);
+        void loadScene(const std::string &sceneFilePath, ecs::EntityRegistry &registry);
 
       private:
         v::vDevice &device;
@@ -27,8 +29,8 @@ namespace scene
         v::vDescriptorPool &textureDescriptorPool;
         std::filesystem::path sceneDirectory{};
 
-        void loadSceneFromFileStream(std::ifstream &stream, ecs::EntityStore &store);
-        void parseComponent(const std::string &typeName, const nlohmann::json &data, ecs::EntityHandle entity);
+        void loadSceneFromFileStream(std::ifstream &stream, ecs::EntityRegistry &registry);
+        void parseComponent(const std::string &typeName, const nlohmann::json &data, ecs::EntityRegistry &registry, Entity entity);
 
         glm::vec3 readVec3(const nlohmann::json &data, const char *primaryKey, glm::vec3 fallback);
         std::string convertToAbsolutePath(const std::filesystem::path &sceneDirectory, const std::string &path);

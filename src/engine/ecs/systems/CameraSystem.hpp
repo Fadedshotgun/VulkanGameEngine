@@ -1,14 +1,14 @@
 #pragma once
 
-#include "Camera.hpp"
-#include "EntityStore.hpp"
-#include "Transform.hpp"
+#include "CameraComponent.hpp"
+#include "EntityRegistry.hpp"
+#include "TransformComponent.hpp"
 
 namespace ecs
 {
     class CameraSystem
     {
       public:
-        static void update(EntityStore &store, float aspectRatio);
+        static void update(EntityRegistry &registry, float aspectRatio);
     };
 }

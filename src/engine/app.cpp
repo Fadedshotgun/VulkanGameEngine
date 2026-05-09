@@ -1,7 +1,7 @@
 #include "app.hpp"
 
 #include "SceneLoader.hpp"
-#include "Camera.hpp"
+#include "CameraComponent.hpp"
 #include "CameraSystem.hpp"
 #include "vTexture.hpp"
 
@@ -48,7 +48,7 @@ namespace v
     void vApp::run()
     {
         scene::SceneLoader sceneLoader{device, *textureSetLayout, *textureDescriptorPool};
-        sceneLoader.loadScene(std::string(PROJECT_ROOT) + "testScene.json", entityStore);
+        sceneLoader.loadScene(std::string(PROJECT_ROOT) + "testScene.json", entityRegistry);
 
         std::vector<std::unique_ptr<vBuffer>> uniformBuffers{vSwapChain::MAX_FRAMES_IN_FLIGHT};
         for (int i = 0; i < vSwapChain::MAX_FRAMES_IN_FLIGHT; i++)
@@ -96,15 +96,14 @@ namespace v
         MovementController movementController{};
         Entity cameraEntity;
 
-        entityStore.forEach<ecs::CameraComponent>([&](auto entity, auto &cameraComponent) {
+        entityRegistry.forEach<ecs::CameraComponent>([&](auto entity, auto &cameraComponent) {
             if (cameraComponent.active)
             {
                 cameraEntity = entity;
             }
         });
 
-        ecs::EntityHandle cameraHandle = entityStore.getEntityHandle(cameraEntity);
-        vCamera &currentCamera = cameraHandle.getComponent<ecs::CameraComponent>().camera;
+        vCamera &currentCamera = entityRegistry.getComponent<ecs::CameraComponent>(cameraEntity).camera;
 
         while (!window.shouldClose())
         {
@@ -117,18 +116,18 @@ namespace v
             frameTime = glm::min(frameTime, MAX_FRAME_TIME); // CAP MINIMUM FPS TO 10
             countFps(frameTime, renderSystem);
 
-            movementController.moveRelative(window.getGLFWwindow(), frameTime, cameraHandle);
-            movementController.mouseMoved(window.getGLFWwindow(), window.mouseMovementX, window.mouseMovementY, cameraHandle);
+            movementController.moveRelative(window.getGLFWwindow(), frameTime, entityRegistry, cameraEntity);
+            movementController.mouseMoved(window.getGLFWwindow(), window.mouseMovementX, window.mouseMovementY, entityRegistry, cameraEntity);
             movementController.scrollMoved(window.getGLFWwindow(), window.scrollY);
             movementController.hotkeys(window.getGLFWwindow(), renderMode);
 
             float aspect = renderer.getAspectRatio();
-            ecs::CameraSystem::update(entityStore, aspect);
+            ecs::CameraSystem::update(entityRegistry, aspect);
 
             if (auto commandBuffer = renderer.beginFrame())
             {
                 int frameIndex = renderer.getFrameIndex();
-                FrameInfo frameInfo{frameIndex, frameTime, commandBuffer, currentCamera, globalDescriptorSets[frameIndex], entityStore, renderMode};
+                FrameInfo frameInfo{frameIndex, frameTime, commandBuffer, currentCamera, globalDescriptorSets[frameIndex], entityRegistry, renderMode};
 
                 // update
                 UniformBufferObject uboData{};
