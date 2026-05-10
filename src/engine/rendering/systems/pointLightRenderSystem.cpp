@@ -60,7 +60,7 @@ namespace v
         PipelineConfigInfo pipelineConfig{};
 
         vPipeline::defaultPipelineConfigInfo(pipelineConfig);
-         vPipeline::enableAlphaBlending(pipelineConfig);
+        vPipeline::enableAlphaBlending(pipelineConfig);
         pipelineConfig.attributeDescriptions.clear();
         pipelineConfig.bindingDescriptions.clear();
 
@@ -83,7 +83,7 @@ namespace v
         pipelineConfig.renderPass = renderPass;
         pipelineConfig.pipelineLayout = pipelineLayout;
 
-        pipeline = std::make_unique<vPipeline>(device, pipelineConfig,  std::string(PROJECT_ROOT) + "shaders/pointLight.vert.spv", std::string(PROJECT_ROOT) + "shaders/pointLight.frag.spv");
+        pipeline = std::make_unique<vPipeline>(device, pipelineConfig, std::string(PROJECT_ROOT) + "shaders/pointLight.vert.spv", std::string(PROJECT_ROOT) + "shaders/pointLight.frag.spv");
     }
 
     static float timePassed = 0.f;
@@ -105,7 +105,7 @@ namespace v
                 }
 
                 transform.translation = glm::vec3(rotateLight * glm::vec4(transform.translation, 1.f));
-                pointLight.intensity = intensity;
+                // pointLight.intensity = intensity;
                 transform.scale = glm::vec3(intensity) * .1f + .05f;
 
                 ubo.pointLights[lightIndex].position = glm::vec4(transform.translation, 1.f);
@@ -151,9 +151,7 @@ namespace v
             });
 
         std::sort(sorted.begin(), sorted.end(), [](const SortedPointLight &left, const SortedPointLight &right)
-        {
-            return left.distanceSquared > right.distanceSquared;
-        });
+            { return left.distanceSquared > right.distanceSquared; });
 
         glm::mat4 projectionView = frameInfo.camera.getProjection() * frameInfo.camera.getView();
 

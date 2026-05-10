@@ -15,11 +15,6 @@
 
 #include "EntityRegistry.hpp"
 
-#include "imgui.h"
-#include "imgui_impl_glfw.h"
-#include "imgui_impl_vulkan.h"
-#include "imgui_internal.h"
-
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
@@ -50,9 +45,7 @@ namespace v
         void loadGameObjects();
         void updateCamera(float frameTime);
 
-        void initImGui();
         void gui();
-        void updateViewport(auto commandBuffer, ImGuiID dockspaceId);
 
         vWindow window{WIDTH,
             HEIGHT,
@@ -62,12 +55,9 @@ namespace v
 
         std::unique_ptr<vDescriptorPool> globalDescriptorPool{};
         std::unique_ptr<vDescriptorPool> textureDescriptorPool{};
-        std::unique_ptr<vDescriptorPool> imguiDescriptorPool{};
         std::unique_ptr<vDescriptorSetLayout> textureSetLayout{};
 
-        ImGuiID dockspaceId;
-        float aspectRatio;
-
+        float aspectRatio{1.0f};
         ecs::EntityRegistry entityRegistry{};
     };
 }

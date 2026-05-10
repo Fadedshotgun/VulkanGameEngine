@@ -26,7 +26,7 @@ namespace v
         void scrollMoved(GLFWwindow *window, double yOffset, ecs::EntityRegistry &entityRegistry, Entity entity);
         void moveRelative(GLFWwindow *window, float deltaTime, ecs::EntityRegistry &entityRegistry, Entity entity);
         void mouseMoved(GLFWwindow *window, double xpos, double ypos, ecs::EntityRegistry &entityRegistry, Entity entity);
-        void hotkeys(GLFWwindow *window, int &lineMode);
+        void hotkeys(GLFWwindow *window, int &lineMode, int &multiplier);
 
       private:
         KeyMappings keys{};
@@ -35,5 +35,6 @@ namespace v
         double lastX, lastY;
 
         bool releasedLast = true;
+        bool pauseReleasedLast = true;
     };
 }

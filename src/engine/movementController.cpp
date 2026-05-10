@@ -44,7 +44,6 @@ namespace v
         transform.rotation.x = glm::clamp(transform.rotation.x, -1.5f, 1.5f);
         transform.rotation.y = glm::mod(transform.rotation.y, glm::two_pi<float>());
 
-        float yaw = transform.rotation.y;
         const glm::vec3 forwardDirection{transform.mat4()[2]};
         const glm::vec3 rightDirection = {transform.mat4()[0]};
         const glm::vec3 upDirection = {transform.mat4()[1]};
@@ -70,7 +69,7 @@ namespace v
         }
     }
 
-    void MovementController::hotkeys(GLFWwindow *window, int &lineMode)
+    void MovementController::hotkeys(GLFWwindow *window, int &lineMode, int &multiplier)
     {
         if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         {
@@ -98,6 +97,23 @@ namespace v
         else
         {
             glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+        }
+
+        if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS && pauseReleasedLast)
+        {
+            if (multiplier == 1)
+            {
+                multiplier = 0;
+            }
+            else
+            {
+                multiplier = 1;
+            }
+            pauseReleasedLast = false;
+        }
+        else if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_RELEASE)
+        {
+            pauseReleasedLast = true;
         }
     }
 }

@@ -4,11 +4,11 @@
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
 
-#include "vDevice.hpp"
 #include "vBuffer.hpp"
-#include "vTexture.hpp"
-#include "vDescriptorSetLayout.hpp"
 #include "vDescriptorPool.hpp"
+#include "vDescriptorSetLayout.hpp"
+#include "vDevice.hpp"
+#include "vTexture.hpp"
 
 #include <memory>
 #include <vector>
@@ -57,7 +57,7 @@ namespace v
         static std::unique_ptr<vModel> createModelFromFile(vDevice &device, const std::string &filepath);
         static std::unique_ptr<vModel> createModelFromFile(vDevice &device, const std::string &filepath, const std::string &texturePath);
         static std::shared_ptr<vModel> createSharedModelFromFile(vDevice &device, const std::string &filepath, vDescriptorSetLayout &setLayout, vDescriptorPool &pool);
-        static std::shared_ptr<vModel> createSharedModelFromFile(vDevice &device, const std::string &filepath, const std::string &texturePath, vDescriptorSetLayout &setLayout, vDescriptorPool &pool); 
+        static std::shared_ptr<vModel> createSharedModelFromFile(vDevice &device, const std::string &filepath, const std::string &texturePath, vDescriptorSetLayout &setLayout, vDescriptorPool &pool);
 
         void setTexture(std::shared_ptr<vTexture> texture);
         std::shared_ptr<vTexture> getTexture() const { return texture; }
@@ -70,6 +70,8 @@ namespace v
         void draw(VkCommandBuffer commandBuffer);
 
         static std::unique_ptr<vModel> createCubeModel(vDevice &device, glm::vec3 offset);
+
+        std::string mypath;
 
       private:
         void createVertexBuffers(const std::vector<Vertex> &vertices);
@@ -85,6 +87,5 @@ namespace v
         bool hasIndexBuffer = false;
         std::shared_ptr<vTexture> texture{};
         VkDescriptorSet textureDescriptorSet = VK_NULL_HANDLE;
-        
     };
 }

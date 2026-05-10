@@ -27,6 +27,8 @@ layout (push_constant) uniform Push {
     mat4 modelMatrix;
 } push;
 
+vec3 borderColor = vec3(1.0,0.0,1.0);
+float borderWidth = 0.01;
 
 void main() {
     vec3 diffuseLight = ubo.ambientColor.xyz * ubo.ambientColor.w; 
@@ -59,5 +61,11 @@ void main() {
     }
 
     vec4 textureColor = texture(textureSampler, fragTextCoord);
+
+    // if (fragTextCoord.x < borderWidth || fragTextCoord.x > 1.0 - borderWidth ||
+    //     fragTextCoord.y < borderWidth || fragTextCoord.y > 1.0 - borderWidth) {
+    //     textureColor = vec4(borderColor, 1.0);
+    // }
+
     outColor = vec4((diffuseLight * fragColor) + (specularLight * fragColor), 1.0) * textureColor;
 }

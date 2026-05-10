@@ -121,20 +121,20 @@ namespace v
         currentFrameIndex = (currentFrameIndex + 1) % vSwapChain::MAX_FRAMES_IN_FLIGHT;
     }
 
-    void vRenderer::editRenderArea(VkCommandBuffer commandBuffer, glm::vec4 offsetFromBorders)
+    void vRenderer::editRenderArea(VkCommandBuffer commandBuffer, glm::vec4 viewportRect)
     {
         VkViewport viewport{};
-        viewport.x = offsetFromBorders.x;
-        viewport.y = offsetFromBorders.y;
-        viewport.width = offsetFromBorders.z;
-        viewport.height = offsetFromBorders.w;
+        viewport.x = viewportRect.x;
+        viewport.y = viewportRect.y;
+        viewport.width = viewportRect.z;
+        viewport.height = viewportRect.w;
         viewport.minDepth = 0.0f;
         viewport.maxDepth = 1.0f;
         vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
 
         VkRect2D scissor{};
-        scissor.offset = {static_cast<int32_t>(offsetFromBorders.x), static_cast<int32_t>(offsetFromBorders.y)};
-        scissor.extent = {static_cast<uint32_t>(offsetFromBorders.z), static_cast<uint32_t>(offsetFromBorders.w)};
+        scissor.offset = {static_cast<int32_t>(viewportRect.x), static_cast<int32_t>(viewportRect.y)};
+        scissor.extent = {static_cast<uint32_t>(viewportRect.z), static_cast<uint32_t>(viewportRect.w)};
         vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
     }
 

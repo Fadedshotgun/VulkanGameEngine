@@ -25,6 +25,7 @@ namespace ecs
             {
                 Entity id = availableEntities.front();
                 availableEntities.pop();
+                entitiesInScene.insert(id);
                 return id;
             }
 
@@ -62,10 +63,11 @@ namespace ecs
 
         const std::string &getName(Entity entity) const
         {
+            static const std::string unnamed = "Unnamed Entity" + std::to_string(entity);
             auto it = entityNames.find(entity);
             if (it == entityNames.end())
             {
-                return "Unnamed Entity";
+                return unnamed;
             }
             return it->second;
         }

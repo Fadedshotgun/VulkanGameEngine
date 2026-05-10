@@ -2,11 +2,11 @@
 
 #include "Entity.hpp"
 
-#include <vector>
-#include <utility>
-#include <cstddef>
 #include <cassert>
+#include <cstddef>
 #include <limits>
+#include <utility>
+#include <vector>
 
 namespace ecs
 {
@@ -99,6 +99,7 @@ namespace ecs
                 remove(entity);
             }
         }
+
       private:
         std::vector<Entity> sparseSet;
 

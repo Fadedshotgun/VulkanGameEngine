@@ -25,9 +25,9 @@ namespace std
         {
             size_t seed = 0;
             v::hashCombine(seed, vertex.position.x, vertex.position.y, vertex.position.z,
-                           vertex.color.x, vertex.color.y, vertex.color.z,
-                           vertex.normal.x, vertex.normal.y, vertex.normal.z,
-                           vertex.uv.x, vertex.uv.y);
+                vertex.color.x, vertex.color.y, vertex.color.z,
+                vertex.normal.x, vertex.normal.y, vertex.normal.z,
+                vertex.uv.x, vertex.uv.y);
             return seed;
         }
     };
@@ -48,7 +48,7 @@ namespace v
         Data modelData{};
         modelData.loadModel(filepath);
 
-        //std::cout << "Vertex count of loaded model: " << modelData.vertices.size() << std::endl;
+        // std::cout << "Vertex count of loaded model: " << modelData.vertices.size() << std::endl;
 
         auto model = std::make_unique<vModel>(device, modelData);
 
@@ -56,6 +56,8 @@ namespace v
         {
             model->setTexture(std::make_shared<vTexture>(device, modelData.diffuseTexturePath));
         }
+
+        model->mypath = filepath;
 
         return model;
     }
@@ -125,8 +127,7 @@ namespace v
             vertexSize,
             vertexCount,
             VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
-        };
+            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT};
 
         stagingBuffer.map();
         stagingBuffer.writeToBuffer((void *)vertices.data());
@@ -136,10 +137,9 @@ namespace v
             vertexSize,
             vertexCount,
             VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
-            VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
-        );
+            VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
-        device.copyBuffer(stagingBuffer.getBuffer() , vertexBuffer->getBuffer(), bufferSize);
+        device.copyBuffer(stagingBuffer.getBuffer(), vertexBuffer->getBuffer(), bufferSize);
     }
 
     void vModel::createIndexBuffers(const std::vector<uint32_t> &indices)
@@ -160,8 +160,7 @@ namespace v
             indexSize,
             indexCount,
             VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
-        };
+            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT};
 
         stagingBuffer.map();
         stagingBuffer.writeToBuffer((void *)indices.data());
@@ -171,8 +170,7 @@ namespace v
             indexSize,
             indexCount,
             VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
-            VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
-        );
+            VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
         device.copyBuffer(stagingBuffer.getBuffer(), indexBuffer->getBuffer(), bufferSize);
     }
