@@ -5,6 +5,9 @@
 #include "SceneLoader.hpp"
 #include "editorUI.hpp"
 #include "vTexture.hpp"
+#include "vTextureManager.hpp"
+
+#include "ParticleEmitterSystem.hpp"
 
 #define MAX_FRAME_TIME .1f
 
@@ -66,24 +69,19 @@ namespace v
         }
 
         const std::string defaultTexturePath = std::string(PROJECT_ROOT) + "textures/white.bmp";
-        VkDescriptorSet defaultTextureSet = VK_NULL_HANDLE;
-        auto defaultTexture = std::make_shared<vTexture>(device, defaultTexturePath);
-        VkDescriptorImageInfo defaultImageInfo{};
-        defaultImageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        defaultImageInfo.imageView = defaultTexture->getImageView();
-        defaultImageInfo.sampler = defaultTexture->getSampler();
 
-        vDescriptorWriter(*textureSetLayout, *textureDescriptorPool)
-            .writeImage(0, &defaultImageInfo)
-            .build(defaultTextureSet);
+        vTextureManager textureManager{device, *textureSetLayout, *textureDescriptorPool};
+        editor::EditorUI editorUI{device, window, renderer, textureManager};
+
+        auto [defaultTextureSet2, defaultTexture2] = textureManager.loadTexture(defaultTexturePath);
 
         int renderMode = 0;
-        DefaultRenderSystem renderSystem = DefaultRenderSystem{device, renderer.getSwapChainRenderPass(), globalSetLayout->getDescriptorSetLayout(), textureSetLayout->getDescriptorSetLayout(), defaultTextureSet};
+        DefaultRenderSystem renderSystem = DefaultRenderSystem{device, renderer.getSwapChainRenderPass(), globalSetLayout->getDescriptorSetLayout(), textureSetLayout->getDescriptorSetLayout(), defaultTextureSet2};
         PointLightRenderSystem pointLightRenderSystem = PointLightRenderSystem{device, renderer.getSwapChainRenderPass(), globalSetLayout->getDescriptorSetLayout()};
+        ParticleRenderSystem particleRenderSystem = ParticleRenderSystem{device, renderer.getSwapChainRenderPass(), globalSetLayout->getDescriptorSetLayout()};
 
         auto currentTime = std::chrono::high_resolution_clock::now();
 
-        editor::EditorUI editorUI{device, window, renderer};
         // initImGui();
         aspectRatio = renderer.getAspectRatio();
 
@@ -123,6 +121,7 @@ namespace v
             }
 
             ecs::CameraSystem::update(entityRegistry, aspectRatio);
+            ecs::updateParticleEmitters(entityRegistry, frameTime);
 
             if (auto commandBuffer = renderer.beginFrame())
             {
@@ -150,6 +149,7 @@ namespace v
                 // render solid before semi transparent
                 renderSystem.renderGameObjects(frameInfo);
                 pointLightRenderSystem.render(frameInfo);
+                particleRenderSystem.render(frameInfo);
 
                 editorUI.render(commandBuffer);
 

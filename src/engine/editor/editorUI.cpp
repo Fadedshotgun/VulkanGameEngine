@@ -2,12 +2,18 @@
 #include "theme.hpp"
 
 #include "Components.hpp"
+#include "vDescriptorSetLayout.hpp"
+#include "vDescriptorWriter.hpp"
 #include "vSwapChain.hpp"
+#include "vTexture.hpp"
+
 #include <cstring>
+#include <string>
 
 namespace editor
 {
-    EditorUI::EditorUI(v::vDevice &device, v::vWindow &window, v::vRenderer &renderer) : renderer(renderer)
+
+    EditorUI::EditorUI(v::vDevice &device, v::vWindow &window, v::vRenderer &renderer, v::vTextureManager &textureManager) : renderer(renderer), textureManager(textureManager)
     {
         imguiDescriptorPool = v::vDescriptorPool::Builder{device}
                                   .setMaxSets(1000)
@@ -51,6 +57,8 @@ namespace editor
         {
             throw std::runtime_error("Failed to initialize ImGui Vulkan backend");
         }
+
+        textureManager.loadTexture(std::string(PROJECT_ROOT) + "textures/FOLDER.png");
 
         editor::applyTheme();
     }
@@ -165,11 +173,105 @@ namespace editor
             }
         }
 
-        // if (ImGui::CollapsingHeader("TestComponent"))
-        // {
-        //     ImGui::Text("This content is collapsible.");
-        //     ImGui::Button("Click Me");
-        // }
+        auto particleEmitterComponent = entityRegistry.tryGetComponent<ecs::ParticleEmitterComponent>(currentlySelectedEntity);
+        if (particleEmitterComponent != nullptr)
+        {
+            if (ImGui::CollapsingHeader("Particle Emitter"))
+            {
+                ImGui::Text("Emission Rate");
+                ImGui::PushItemWidth(-1.0f);
+                ImGui::DragFloat("##EmissionRate", &particleEmitterComponent->emissionRate, .1f, 0.f);
+                ImGui::PopItemWidth();
+
+                ImGui::Text("Emission Direction");
+                ImGui::PushItemWidth(-1.0f);
+                ImGui::DragFloat3("##EmissionDirection", &particleEmitterComponent->emissionDirection.x, .1f, 0.f);
+                ImGui::PopItemWidth();
+
+                ImGui::Text("Color");
+                ImGui::PushItemWidth(-1.0f);
+                ImGui::ColorEdit3("##Color", &particleEmitterComponent->color.x);
+                ImGui::PopItemWidth();
+
+                ImGui::Text("Speed");
+                ImGui::PushItemWidth(-1.0f);
+                ImGui::DragFloat("##Speed", &particleEmitterComponent->speed, .1f, 0.f);
+                ImGui::PopItemWidth();
+
+                ImGui::Text("Size");
+                ImGui::PushItemWidth(-1.0f);
+                ImGui::DragFloat("##Size", &particleEmitterComponent->size, .1f, 0.f);
+                ImGui::PopItemWidth();
+
+                ImGui::Text("Lifetime");
+                ImGui::PushItemWidth(-1.0f);
+                ImGui::DragFloat("##Lifetime", &particleEmitterComponent->lifetime, .1f, 0.f);
+                ImGui::PopItemWidth();
+
+                ImGui::Text("RandomAngle");
+                ImGui::PushItemWidth(-1.0f);
+                ImGui::DragFloat("##Angle", &particleEmitterComponent->angle1, .1f, 0.f);
+                ImGui::PopItemWidth();
+            }
+        }
+        ImGui::End();
+    }
+
+    static int id = 0;
+    static int itemsInLine = 0;
+
+    // void EditorUI::buttonTest()
+    // {
+    //     ImGui::BeginGroup();
+    //     ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.f, 0.f, 0.f, 0.f));
+    //     ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.f, 0.f, 0.f, 0.f));
+    //     ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.f, 0.f, 0.f, 0.f));
+    //     ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(20, ImGui::GetStyle().ItemSpacing.y));
+
+    //     itemsInLine++;
+    //     id++;
+    //     ImGui::ImageButton(std::to_string(id).c_str(), (ImTextureID)textureManager.getTexture(std::string(PROJECT_ROOT) + "textures/FOLDER.png").first, ImVec2(32, 32));
+
+    //     char *label = (char *)("Folder " + std::to_string(id)).c_str();
+    //     float text_width = ImGui::CalcTextSize(label).x;
+    //     ImGui::SetCursorPosX(ImGui::GetCursorPosX() + (32 - text_width) * 0.5f);
+
+    //     ImGui::Text(label);
+    //     ImGui::EndGroup();
+    //     ImGui::PopStyleColor(3);
+
+    //     if (ImGui::IsItemHovered())
+    //     {
+    //         ImGui::SetTooltip("FOLDER!!!");
+    //     }
+
+    //     if (ImGui::IsItemClicked())
+    //     {
+    //         std::cout << "Clicked!" << std::endl;
+    //     }
+
+    //     float spacing = ImGui::GetStyle().ItemSpacing.x + 5;
+    //     float availWidth = ImGui::GetContentRegionAvail().x;
+
+    //     if (availWidth > (64 + spacing) * itemsInLine)
+    //     {
+    //         ImGui::SameLine();
+    //     }
+    //     else
+    //     {
+    //         itemsInLine = 0;
+    //     }
+
+    //     ImGui::PopStyleVar();
+    // }
+
+    void EditorUI::explorer()
+    {
+        ImGui::Begin("Explorer");
+
+        // id = 0;
+        // itemsInLine = 0;
+        // buttonTest();
 
         ImGui::End();
     }
@@ -228,6 +330,8 @@ namespace editor
 
         ImGui::Text("State: %s", multiplier == 1 ? "Running" : "Paused");
         ImGui::End();
+
+        explorer();
 
         if (ImGui::IsWindowFocused(ImGuiFocusedFlags_AnyWindow))
         {

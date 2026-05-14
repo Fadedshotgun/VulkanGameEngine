@@ -210,6 +210,40 @@
                     }
                 }
             ]
+        },
+        {
+            "name": "Emitter",
+            "components": [
+                {
+                    "type": "Transform",
+                    "data": {
+                        "translation": [
+                            0.0,
+                            -5.0,
+                            0.0
+                        ]
+                    }
+               },
+                {
+                    "type": "ParticleEmitter",
+                    "data": {
+                        "emissionRate": 5.0,
+                        "emissionDirection": [
+                            0.0,
+                            1.0,
+                            0.0
+                        ],
+                        "color": [
+                            1.0,
+                            1.0,
+                            1.0
+                        ],
+                        "lifetime": 1.0,
+                        "speed": 1.0,
+                        "size": 1.0
+                    }
+                }
+            ]
         }
     ]
 }

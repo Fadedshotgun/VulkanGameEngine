@@ -1,0 +1,3 @@
+- Batch draw all particles using an SSBO
+- File explorerer
+- Lua?

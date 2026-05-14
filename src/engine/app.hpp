@@ -1,9 +1,11 @@
 #pragma once
 
 #include "defaultRenderSystem.hpp"
+#include "particleRenderSystem.hpp"
+#include "pointLightRenderSystem.hpp"
+
 #include "hash.hpp"
 #include "movementController.hpp"
-#include "pointLightRenderSystem.hpp"
 #include "vCamera.hpp"
 #include "vDevice.hpp"
 #include "vRenderer.hpp"

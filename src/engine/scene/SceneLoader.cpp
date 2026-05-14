@@ -110,6 +110,18 @@ namespace scene
 
             registry.addComponent<ecs::PointLightComponent>(entity, {color, intensity});
         }
+        else if (typeName == "ParticleEmitter")
+        {
+            const float emissionRate = data.value("emissionRate", 0.f);
+            const glm::vec3 emissionDirection = readVec3(data, "emissionDirection", {0.f, 1.f, 0.f});
+            const glm::vec3 color = readVec3(data, "color", {1.f, 1.f, 1.f});
+            const float lifetime = data.value("lifetime", 0.f);
+            const float speed = data.value("speed", 0.f);
+            const float size = data.value("size", 1.f);
+            const float angle1 = data.value("angle1", 0.f);
+
+            registry.addComponent<ecs::ParticleEmitterComponent>(entity, {emissionRate, lifetime, speed, size, angle1, emissionDirection, color});
+        }
         else
         {
             std::cerr << "Unknown component type: " << typeName << '\n';

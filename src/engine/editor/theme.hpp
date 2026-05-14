@@ -29,5 +29,8 @@ namespace editor
         colors[ImGuiCol_FrameBgHovered] = ImVec4(1.00f, 0.00f, 0.00f, 0.40f);
         colors[ImGuiCol_FrameBgActive] = ImVec4(1.00f, 0.00f, 0.00f, 0.67f);
         colors[ImGuiCol_CheckMark] = ImVec4(1.00f, 1.00f, 1.00f, 1.00f);
+        colors[ImGuiCol_Button] = ImVec4(0.06f, 0.06f, 0.06f, 1.00f);
+        colors[ImGuiCol_ButtonHovered] = ImVec4(1.00f, 0.00f, 0.00f, 0.40f);
+        colors[ImGuiCol_ButtonActive] = ImVec4(1.00f, 0.00f, 0.00f, 0.67f);
     }
 }

@@ -2,8 +2,8 @@
 
 #include <string>
 
-#include "vDevice.hpp"
 #include "vBuffer.hpp"
+#include "vDevice.hpp"
 
 namespace v
 {
@@ -20,7 +20,6 @@ namespace v
         VkSampler getSampler() const { return textureSampler; }
 
       private:
-
         void transitionImageLayout(vDevice &device, VkImage image, VkImageLayout oldLayout, VkImageLayout newLayout);
 
         void createTextureImage(const std::string &texturePath);

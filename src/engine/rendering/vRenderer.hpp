@@ -44,6 +44,8 @@ namespace v
         void endSwapChain(VkCommandBuffer commandBuffer);
         void editRenderArea(VkCommandBuffer commandBuffer, glm::vec4 offsetFromBorders);
 
+        vDevice &getDevice() const { return device; }
+
       private:
         void createCommandBuffers();
         void freeCommandBuffers();
