@@ -121,7 +121,7 @@ namespace v
             }
 
             ecs::CameraSystem::update(entityRegistry, aspectRatio);
-            ecs::updateParticleEmitters(entityRegistry, frameTime);
+            // ecs::updateParticleEmitters(entityRegistry, frameTime);
 
             if (auto commandBuffer = renderer.beginFrame())
             {
@@ -146,10 +146,12 @@ namespace v
 
                 editorUI.updateView(commandBuffer, aspectRatio);
 
-                // render solid before semi transparent
+                // render solid
                 renderSystem.renderGameObjects(frameInfo);
+                // particleRenderSystem.render(frameInfo);
+
+                // render semi transparent
                 pointLightRenderSystem.render(frameInfo);
-                particleRenderSystem.render(frameInfo);
 
                 editorUI.render(commandBuffer);
 

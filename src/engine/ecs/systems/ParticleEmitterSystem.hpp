@@ -2,6 +2,7 @@
 
 #include "Components.hpp"
 #include "EntityRegistry.hpp"
+#include "vDevice.hpp"
 
 #include <algorithm>
 #include <random>
@@ -32,7 +33,7 @@ namespace ecs
             forward * sinAngle * glm::sin(azimuth));
     }
 
-    static void emitParticle(ParticleEmitterComponent &emitter, TransformComponent &transform, int count = 1)
+    inline void emitParticle(ParticleEmitterComponent &emitter, TransformComponent &transform, int count = 1)
     {
         for (int i = 0; i < count; i++)
         {
@@ -49,7 +50,7 @@ namespace ecs
         }
     }
 
-    static void clampEmitter(ParticleEmitterComponent &emitter)
+    inline void clampEmitter(ParticleEmitterComponent &emitter)
     {
         emitter.size = std::max(0.f, emitter.size);
         emitter.emissionRate = std::max(0.f, emitter.emissionRate);
@@ -57,7 +58,7 @@ namespace ecs
         emitter.angle1 = std::max(0.f, emitter.angle1);
     }
 
-    static void updateParticleEmitter(ParticleEmitterComponent &emitter, TransformComponent &transform, float frameTime)
+    inline void updateParticleEmitter(ParticleEmitterComponent &emitter, TransformComponent &transform, float frameTime)
     {
         clampEmitter(emitter);
 
@@ -94,7 +95,22 @@ namespace ecs
         }
     }
 
-    void updateParticleEmitters(EntityRegistry &registry, float frameTime)
+    inline void destroyParticleEmitterInstanceData(ParticleEmitterComponent &emitter, v::vDevice &device)
+    {
+        if (emitter.instanceData.buffer == VK_NULL_HANDLE)
+            return;
+
+        vkUnmapMemory(device.device(), emitter.instanceData.memory);
+        vkDestroyBuffer(device.device(), emitter.instanceData.buffer, nullptr);
+        vkFreeMemory(device.device(), emitter.instanceData.memory, nullptr);
+
+        emitter.instanceData.buffer = VK_NULL_HANDLE;
+        emitter.instanceData.memory = VK_NULL_HANDLE;
+        emitter.instanceData.mappedPointer = nullptr;
+        emitter.instanceData.capacity = 0;
+    }
+
+    inline void updateParticleEmitters(EntityRegistry &registry, float frameTime)
     {
         registry.forEach<ParticleEmitterComponent, TransformComponent>(updateParticleEmitter, frameTime);
     }

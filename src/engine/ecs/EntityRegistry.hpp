@@ -1,6 +1,8 @@
 #pragma once
 
 #include "ComponentSet.hpp"
+#include "Components.hpp"
+#include "vDevice.hpp"
 
 #include <functional>
 #include <memory>
@@ -83,6 +85,11 @@ namespace ecs
         template <typename Component>
         void removeComponent(Entity entity)
         {
+            auto *c = tryGetComponent<Component>(entity);
+            // if (std::is_same_v<Component, ecs::ParticleEmitterComponent> && c != nullptr)
+            // {
+            //     destroyParticleEmitterInstanceData(*c, device);
+            // }
             getComponentSet<Component>().remove(entity);
         }
 

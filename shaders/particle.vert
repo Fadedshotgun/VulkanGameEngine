@@ -14,12 +14,6 @@ struct PointLight {
     vec4 color;
 };
 
-layout (push_constant) uniform PushConstants {
-    vec3 particlePosition;
-    vec4 color;
-    float size;
-} pushConstants;
-
 layout(set = 0, binding = 0) uniform UniformBufferObject {
     mat4 projection;
     mat4 view;
@@ -30,12 +24,19 @@ layout(set = 0, binding = 0) uniform UniformBufferObject {
 } ubo;
 
 layout (location = 0) out vec2 fragOffset;
+layout (location = 1) out vec4 fragColor;
+
+layout (location = 0) in vec3 position;
+layout (location = 1) in float size;
+layout (location = 2) in vec4 color;
+
 
 void main() {
-    fragOffset = OFFSETS[gl_VertexIndex];
+    fragOffset = OFFSETS[gl_VertexIndex] * size;
 
-    vec4 particleInCameraSpace = ubo.view * vec4(pushConstants.particlePosition, 1.0);
-    vec4 positionInCameraSpace = particleInCameraSpace + pushConstants.size * vec4(fragOffset, 0.0, 0.0);
+    vec4 particleInCameraSpace = ubo.view * vec4(position, 1.0);
+    vec4 positionInCameraSpace = particleInCameraSpace + vec4(fragOffset, 0.0, 0.0);
 
     gl_Position = ubo.projection * positionInCameraSpace;
+    fragColor = color;
 }

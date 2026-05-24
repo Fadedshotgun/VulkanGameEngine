@@ -28,6 +28,7 @@ namespace v
       private:
         void createPipelineLayout(VkDescriptorSetLayout globalSetLayout);
         void createPipeline(VkRenderPass renderPass, int rasterMode);
+        void resizeInstanceBuffer(ecs::ParticleEmitterComponent &emitter);
 
         vDevice &device;
         VkRenderPass renderPass;
