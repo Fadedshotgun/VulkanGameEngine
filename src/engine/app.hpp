@@ -60,6 +60,6 @@ namespace v
         std::unique_ptr<vDescriptorSetLayout> textureSetLayout{};
 
         float aspectRatio{1.0f};
-        ecs::EntityRegistry entityRegistry{};
+        ecs::EntityRegistry entityRegistry{device};
     };
 }

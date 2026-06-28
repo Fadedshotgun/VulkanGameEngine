@@ -107,19 +107,22 @@ namespace editor
             return;
         }
 
+        if (selectedEntityDirty)
+        {
+            std::string currentName = entityRegistry.getName(currentlySelectedEntity);
+            std::strncpy(cachedInspectorName.data(), currentName.c_str(), cachedInspectorName.size() - 1);
+            cachedInspectorName[cachedInspectorName.size() - 1] = '\0';
+            cachedInspectorDetails.clear();
+            selectedEntityDirty = false;
+        }
+
         ImGui::AlignTextToFramePadding();
         ImGui::Text("Name");
         ImGui::SameLine();
 
-        const char *og = entityRegistry.getName(currentlySelectedEntity).c_str();
-        std::string str(og);
-        static char text[30] = "";
-        std::strncpy(text, str.c_str(), IM_ARRAYSIZE(text) - 1);
-
-        text[IM_ARRAYSIZE(text) - 1] = '\0';
-        if (ImGui::InputText("##Name", text, IM_ARRAYSIZE(text), ImGuiInputTextFlags_EnterReturnsTrue))
+        if (ImGui::InputText("##Name", cachedInspectorName.data(), static_cast<int>(cachedInspectorName.size()), ImGuiInputTextFlags_EnterReturnsTrue))
         {
-            entityRegistry.setName(currentlySelectedEntity, text);
+            entityRegistry.setName(currentlySelectedEntity, cachedInspectorName.data());
         }
 
         ImGui::Separator();
@@ -276,7 +279,7 @@ namespace editor
         ImGui::End();
     }
 
-    bool EditorUI::drawUI(ecs::EntityRegistry &entityRegistry, int multiplier)
+    bool EditorUI::drawUI(ecs::EntityRegistry &entityRegistry, int multiplier, const v::FrameTimings &frameTimings)
     {
         ImGui_ImplVulkan_NewFrame();
         ImGui_ImplGlfw_NewFrame();
@@ -327,6 +330,36 @@ namespace editor
 
         ImGui::Begin("Debug");
         ImGui::Text("%.1f FPS", ImGui::GetIO().Framerate);
+        ImGui::Separator();
+
+        if (ImGui::CollapsingHeader("Frame Timing Stats", ImGuiTreeNodeFlags_DefaultOpen))
+        {
+            ImGui::Text("Total frame avg: %.2f ms", frameTimings.totalFrame.average);
+            ImGui::Text("CPU update avg: %.2f ms", frameTimings.cpuUpdate.average);
+            ImGui::Text("Render pass avg: %.2f ms", frameTimings.renderPass.average);
+            ImGui::Text("GPU submit avg: %.2f ms", frameTimings.gpuSubmit.average);
+            ImGui::Text("GPU wait avg: %.2f ms", frameTimings.gpuWait.average);
+
+            if (ImGui::CollapsingHeader("Detailed Phase Stats"))
+            {
+                ImGui::Text("Movement avg: %.2f ms", frameTimings.movementUpdate.average);
+                ImGui::Text("Camera system avg: %.2f ms", frameTimings.cameraSystemUpdate.average);
+                ImGui::Text("Particle emitters avg: %.2f ms", frameTimings.particleEmitterUpdate.average);
+                ImGui::Text("ImGui draw avg: %.2f ms", frameTimings.imguiDraw.average);
+
+                ImGui::Separator();
+                ImGui::Text("Last / Min / Max (ms):");
+                ImGui::Text("  Total frame: %.2f / %.2f / %.2f", frameTimings.totalFrame.last, frameTimings.totalFrame.min, frameTimings.totalFrame.max);
+                ImGui::Text("  CPU update: %.2f / %.2f / %.2f", frameTimings.cpuUpdate.last, frameTimings.cpuUpdate.min, frameTimings.cpuUpdate.max);
+                ImGui::Text("  Render pass: %.2f / %.2f / %.2f", frameTimings.renderPass.last, frameTimings.renderPass.min, frameTimings.renderPass.max);
+                ImGui::Text("  GPU submit: %.2f / %.2f / %.2f", frameTimings.gpuSubmit.last, frameTimings.gpuSubmit.min, frameTimings.gpuSubmit.max);
+                ImGui::Text("  GPU wait: %.2f / %.2f / %.2f", frameTimings.gpuWait.last, frameTimings.gpuWait.min, frameTimings.gpuWait.max);
+                ImGui::Text("  Movement: %.2f / %.2f / %.2f", frameTimings.movementUpdate.last, frameTimings.movementUpdate.min, frameTimings.movementUpdate.max);
+                ImGui::Text("  Camera system: %.2f / %.2f / %.2f", frameTimings.cameraSystemUpdate.last, frameTimings.cameraSystemUpdate.min, frameTimings.cameraSystemUpdate.max);
+                ImGui::Text("  Particle emitters: %.2f / %.2f / %.2f", frameTimings.particleEmitterUpdate.last, frameTimings.particleEmitterUpdate.min, frameTimings.particleEmitterUpdate.max);
+                ImGui::Text("  ImGui draw: %.2f / %.2f / %.2f", frameTimings.imguiDraw.last, frameTimings.imguiDraw.min, frameTimings.imguiDraw.max);
+            }
+        }
 
         ImGui::Text("State: %s", multiplier == 1 ? "Running" : "Paused");
         ImGui::End();

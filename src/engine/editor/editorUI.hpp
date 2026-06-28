@@ -1,4 +1,6 @@
+#include <array>
 #include <memory>
+#include <string>
 
 #include <vulkan/vulkan.h>
 
@@ -9,6 +11,7 @@
 #include "vWindow.hpp"
 
 #include "entityRegistry.hpp"
+#include "FrameTimings.hpp"
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_vulkan.h"
@@ -23,10 +26,16 @@ namespace editor
         EditorUI(v::vDevice &device, v::vWindow &window, v::vRenderer &renderer, v::vTextureManager &textureManager);
         ~EditorUI();
 
-        bool drawUI(ecs::EntityRegistry &entityRegistry, int multiplier);
+        bool drawUI(ecs::EntityRegistry &entityRegistry, int multiplier, const v::FrameTimings &frameTimings);
         void render(VkCommandBuffer commandBuffer);
         void updateView(VkCommandBuffer commandBuffer, float &aspectRatio);
-        void selectEntity(Entity id) { currentlySelectedEntity = id; }
+        void selectEntity(Entity id) {
+            if (id != currentlySelectedEntity)
+            {
+                currentlySelectedEntity = id;
+                selectedEntityDirty = true;
+            }
+        }
 
         std::pair<VkDescriptorSet, std::shared_ptr<v::vTexture>> loadTexture(std::string texturePath, v::vDescriptorSetLayout &textureSetLayout, v::vDescriptorPool &textureDescriptorPool);
 
@@ -40,5 +49,8 @@ namespace editor
         v::vTextureManager &textureManager;
         ImGuiID dockspaceId{0};
         Entity currentlySelectedEntity{0};
+        bool selectedEntityDirty{true};
+        std::array<char, 256> cachedInspectorName{};
+        std::string cachedInspectorDetails;
     };
 }

@@ -8,6 +8,7 @@
 #include "vTextureManager.hpp"
 
 #include "ParticleEmitterSystem.hpp"
+#include "FrameTimings.hpp"
 
 #define MAX_FRAME_TIME .1f
 
@@ -100,9 +101,11 @@ namespace v
         vCamera &currentCamera = entityRegistry.getComponent<ecs::CameraComponent>(cameraEntity).camera;
 
         int multiplier = 1;
+        v::FrameTimings frameTimings{};
 
         while (!window.shouldClose())
         {
+            auto frameStartTime = std::chrono::high_resolution_clock::now();
             glfwPollEvents();
 
             auto newTime = std::chrono::high_resolution_clock::now();
@@ -112,6 +115,9 @@ namespace v
             frameTime = glm::min(frameTime, MAX_FRAME_TIME); // CAP MINIMUM FPS TO 10
             float simulationFrameTime = frameTime * multiplier;
 
+            auto cpuUpdateStart = std::chrono::high_resolution_clock::now();
+
+            auto movementStart = std::chrono::high_resolution_clock::now();
             if (!focusedOnEditor)
             {
                 movementController.moveRelative(window.getGLFWwindow(), frameTime, entityRegistry, cameraEntity);
@@ -119,16 +125,31 @@ namespace v
                 movementController.scrollMoved(window.getGLFWwindow(), window.scrollY, entityRegistry, cameraEntity);
                 movementController.hotkeys(window.getGLFWwindow(), renderMode, multiplier);
             }
+            auto movementEnd = std::chrono::high_resolution_clock::now();
+            frameTimings.movementUpdate.addSample(std::chrono::duration<float, std::chrono::milliseconds::period>(movementEnd - movementStart).count());
 
+            auto cameraStart = std::chrono::high_resolution_clock::now();
             ecs::CameraSystem::update(entityRegistry, aspectRatio);
-            // ecs::updateParticleEmitters(entityRegistry, frameTime);
+            auto cameraEnd = std::chrono::high_resolution_clock::now();
+            frameTimings.cameraSystemUpdate.addSample(std::chrono::duration<float, std::chrono::milliseconds::period>(cameraEnd - cameraStart).count());
+
+            auto particleStart = std::chrono::high_resolution_clock::now();
+            ecs::updateParticleEmitters(entityRegistry, frameTime);
+            auto particleEnd = std::chrono::high_resolution_clock::now();
+            frameTimings.particleEmitterUpdate.addSample(std::chrono::duration<float, std::chrono::milliseconds::period>(particleEnd - particleStart).count());
+
+            auto cpuUpdateEnd = std::chrono::high_resolution_clock::now();
+            frameTimings.cpuUpdate.addSample(std::chrono::duration<float, std::chrono::milliseconds::period>(cpuUpdateEnd - cpuUpdateStart).count());
 
             if (auto commandBuffer = renderer.beginFrame())
             {
                 int frameIndex = renderer.getFrameIndex();
                 FrameInfo frameInfo{frameIndex, simulationFrameTime, commandBuffer, currentCamera, globalDescriptorSets[frameIndex], entityRegistry, renderMode};
 
-                focusedOnEditor = editorUI.drawUI(entityRegistry, multiplier);
+                auto imguiStart = std::chrono::high_resolution_clock::now();
+                focusedOnEditor = editorUI.drawUI(entityRegistry, multiplier, frameTimings);
+                auto imguiEnd = std::chrono::high_resolution_clock::now();
+                frameTimings.imguiDraw.addSample(std::chrono::duration<float, std::chrono::milliseconds::period>(imguiEnd - imguiStart).count());
 
                 // update
                 UniformBufferObject uboData{};
@@ -141,14 +162,19 @@ namespace v
                 uniformBuffers[frameIndex]->writeToBuffer(&uboData);
                 uniformBuffers[frameIndex]->flush();
 
-                // render
+                auto gpuWaitStart = std::chrono::high_resolution_clock::now();
+                // no explicit fence wait here in release; if needed add synchronization later
+                auto gpuWaitEnd = std::chrono::high_resolution_clock::now();
+                frameTimings.gpuWait.addSample(std::chrono::duration<float, std::chrono::milliseconds::period>(gpuWaitEnd - gpuWaitStart).count());
+
+                auto renderPassStart = std::chrono::high_resolution_clock::now();
                 renderer.beginSwapChain(commandBuffer);
 
                 editorUI.updateView(commandBuffer, aspectRatio);
 
                 // render solid
                 renderSystem.renderGameObjects(frameInfo);
-                // particleRenderSystem.render(frameInfo);
+                particleRenderSystem.render(frameInfo);
 
                 // render semi transparent
                 pointLightRenderSystem.render(frameInfo);
@@ -156,12 +182,21 @@ namespace v
                 editorUI.render(commandBuffer);
 
                 renderer.endSwapChain(commandBuffer);
+                auto renderPassEnd = std::chrono::high_resolution_clock::now();
+                frameTimings.renderPass.addSample(std::chrono::duration<float, std::chrono::milliseconds::period>(renderPassEnd - renderPassStart).count());
+
+                auto gpuSubmitStart = std::chrono::high_resolution_clock::now();
                 renderer.endFrame();
+                auto gpuSubmitEnd = std::chrono::high_resolution_clock::now();
+                frameTimings.gpuSubmit.addSample(std::chrono::duration<float, std::chrono::milliseconds::period>(gpuSubmitEnd - gpuSubmitStart).count());
             }
 
             window.resetWindowInfo();
+            auto frameEndTime = std::chrono::high_resolution_clock::now();
+            frameTimings.totalFrame.addSample(std::chrono::duration<float, std::chrono::milliseconds::period>(frameEndTime - frameStartTime).count());
         }
 
         vkDeviceWaitIdle(device.device());
+        ecs::destroyAllParticleEmitterInstanceData(entityRegistry);
     }
 }

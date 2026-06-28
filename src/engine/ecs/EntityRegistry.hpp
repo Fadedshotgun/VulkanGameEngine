@@ -19,6 +19,8 @@ namespace ecs
     class EntityRegistry
     {
       public:
+        EntityRegistry(v::vDevice &device) : device(device) {}
+
         static constexpr Entity MAX_ENTITIES = 5000;
 
         Entity createEntity()
@@ -86,10 +88,10 @@ namespace ecs
         void removeComponent(Entity entity)
         {
             auto *c = tryGetComponent<Component>(entity);
-            // if (std::is_same_v<Component, ecs::ParticleEmitterComponent> && c != nullptr)
-            // {
-            //     destroyParticleEmitterInstanceData(*c, device);
-            // }
+            if (std::is_same_v<Component, ecs::ParticleEmitterComponent> && c != nullptr)
+            {
+                destroyParticleEmitterInstanceData(*c, device);
+            }
             getComponentSet<Component>().remove(entity);
         }
 
@@ -169,6 +171,8 @@ namespace ecs
                 }
             }
         }
+
+        v::vDevice &device;
 
       private:
         uint32_t nextEntityId = 0;

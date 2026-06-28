@@ -44,9 +44,10 @@ namespace v
         transform.rotation.x = glm::clamp(transform.rotation.x, -1.5f, 1.5f);
         transform.rotation.y = glm::mod(transform.rotation.y, glm::two_pi<float>());
 
-        const glm::vec3 forwardDirection{transform.mat4()[2]};
-        const glm::vec3 rightDirection = {transform.mat4()[0]};
-        const glm::vec3 upDirection = {transform.mat4()[1]};
+        auto mat4 = transform.mat4();
+        const glm::vec3 forwardDirection{mat4[2]};
+        const glm::vec3 rightDirection = {mat4[0]};
+        const glm::vec3 upDirection = {mat4[1]};
 
         glm::vec3 moveDirection{0};
 

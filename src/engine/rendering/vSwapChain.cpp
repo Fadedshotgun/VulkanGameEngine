@@ -218,7 +218,7 @@ namespace v
             viewInfo.image = swapChainImages[i];
             viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
             viewInfo.format = swapChainImageFormat;
-            viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT;
+            viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
             viewInfo.subresourceRange.baseMipLevel = 0;
             viewInfo.subresourceRange.levelCount = 1;
             viewInfo.subresourceRange.baseArrayLayer = 0;
@@ -425,14 +425,14 @@ namespace v
 
     VkPresentModeKHR vSwapChain::chooseSwapPresentMode(const std::vector<VkPresentModeKHR> &availablePresentModes)
     {
-        // for (const auto &availablePresentMode : availablePresentModes)
-        // {
-        //     if (availablePresentMode == VK_PRESENT_MODE_MAILBOX_KHR)
-        //     {
-        //         std::cout << "Present mode: Mailbox" << std::endl;
-        //         return availablePresentMode;
-        //     }
-        // } // LOWER LATENCY, BUT HIGHER POWER CONSUMPTION
+        for (const auto &availablePresentMode : availablePresentModes)
+        {
+            if (availablePresentMode == VK_PRESENT_MODE_MAILBOX_KHR)
+            {
+                std::cout << "Present mode: Mailbox" << std::endl;
+                return availablePresentMode;
+            }
+        } // LOWER LATENCY, BUT HIGHER POWER CONSUMPTION
 
         // for (const auto &availablePresentMode : availablePresentModes)
         // {

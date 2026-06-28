@@ -110,6 +110,15 @@ namespace ecs
         emitter.instanceData.capacity = 0;
     }
 
+    inline void destroyAllParticleEmitterInstanceData(EntityRegistry &registry)
+    {
+        registry.forEach<ParticleEmitterComponent>(
+            [&](ParticleEmitterComponent &emitter)
+            {
+                destroyParticleEmitterInstanceData(emitter, registry.device);
+            });
+    }
+
     inline void updateParticleEmitters(EntityRegistry &registry, float frameTime)
     {
         registry.forEach<ParticleEmitterComponent, TransformComponent>(updateParticleEmitter, frameTime);

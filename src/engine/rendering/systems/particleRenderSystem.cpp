@@ -144,25 +144,25 @@ namespace v
         frameInfo.entityRegistry.forEach<ecs::ParticleEmitterComponent, ecs::TransformComponent>(
             [&](ecs::ParticleEmitterComponent &emitter, ecs::TransformComponent &transform)
             {
-                // if (emitter.particles.empty())
-                //     return;
+                if (emitter.particles.empty())
+                    return;
 
-                // resizeInstanceBuffer(emitter);
+                resizeInstanceBuffer(emitter);
 
-                // auto *particleInstance = static_cast<ParticleInstance *>(emitter.instanceData.mappedPointer);
-                // for (size_t i = 0; i < emitter.particles.size(); i++)
-                // {
-                //     auto &particle = emitter.particles[i];
-                //     particleInstance[i].position = particle.position;
-                //     particleInstance[i].size = particle.size / 100.f;
-                //     particleInstance[i].color = glm::vec4(particle.color, 1);
-                // }
+                auto *particleInstance = static_cast<ParticleInstance *>(emitter.instanceData.mappedPointer);
+                for (size_t i = 0; i < emitter.particles.size(); i++)
+                {
+                    auto &particle = emitter.particles[i];
+                    particleInstance[i].position = particle.position;
+                    particleInstance[i].size = particle.size / 100.f;
+                    particleInstance[i].color = glm::vec4(particle.color, 1);
+                }
 
-                // VkBuffer vertexBuffers[] = {emitter.instanceData.buffer};
-                // VkDeviceSize offsets[] = {0};
-                // vkCmdBindVertexBuffers(frameInfo.commandBuffer, 0, 1, vertexBuffers, offsets);
+                VkBuffer vertexBuffers[] = {emitter.instanceData.buffer};
+                VkDeviceSize offsets[] = {0};
+                vkCmdBindVertexBuffers(frameInfo.commandBuffer, 0, 1, vertexBuffers, offsets);
 
-                // vkCmdDraw(frameInfo.commandBuffer, 6, static_cast<uint32_t>(emitter.particles.size()), 0, 0);
+                vkCmdDraw(frameInfo.commandBuffer, 6, static_cast<uint32_t>(emitter.particles.size()), 0, 0);
                 // for (auto particle : emitter.particles)
                 // {
                 //     ParticlePushConstantData push{};
